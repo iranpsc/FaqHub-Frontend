@@ -8,7 +8,7 @@ import { BaseButton } from '@/components/ui/BaseButton';
 import { BaseInput } from '@/components/ui/BaseInput';
 import { BaseBadge } from '@/components/ui/BaseBadge';
 import { BaseAlert } from '@/components/ui/BaseAlert';
-import { apiService } from '@/services/api';
+import { apiService, isAuthError } from '@/services/api';
 import Link from 'next/link';
 
 interface UserProfile {
@@ -124,7 +124,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      if (error instanceof Error && error.message.includes('Authentication required')) {
+      if (isAuthError(error)) {
         showAlert('error', 'لطفا دوباره وارد شوید');
         // Redirect to home page after a short delay
         setTimeout(() => {
@@ -145,7 +145,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error fetching user stats:', error);
-      if (error instanceof Error && error.message.includes('Authentication required')) {
+      if (isAuthError(error)) {
         showAlert('error', 'لطفا دوباره وارد شوید');
       }
     } finally {
@@ -162,7 +162,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error fetching user activity:', error);
-      if (error instanceof Error && error.message.includes('Authentication required')) {
+      if (isAuthError(error)) {
         showAlert('error', 'لطفا دوباره وارد شوید');
       }
     } finally {
@@ -196,17 +196,17 @@ export default function ProfilePage() {
         updateUser({ image_url: response.data!.image_url });
         showAlert('success', 'عکس پروفایل با موفقیت بروزرسانی شد');
       } else {
-        showAlert('error', 'خطا در بروزرسانی عکس پروفایل');
+        showAlert('error', 'خطا در به‌روزرسانی عکس پروفایل');
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      if (error instanceof Error && error.message.includes('Authentication required')) {
+      if (isAuthError(error)) {
         showAlert('error', 'لطفا دوباره وارد شوید');
         setTimeout(() => {
           window.location.href = '/';
         }, 2000);
       } else {
-        showAlert('error', 'خطا در بروزرسانی عکس پروفایل');
+        showAlert('error', 'خطا در به‌روزرسانی عکس پروفایل');
       }
     } finally {
       setUploadingImage(false);
@@ -231,7 +231,7 @@ export default function ProfilePage() {
         // Don't update user context to avoid triggering useEffect
         showAlert('success', 'تنظیمات با موفقیت بروزرسانی شد');
       } else {
-        showAlert('error', 'خطا در بروزرسانی تنظیمات');
+        showAlert('error', 'خطا در به‌روزرسانی تنظیمات');
         // Revert the setting if there was an error
         setSettings(prev => ({
           ...prev,
@@ -240,13 +240,13 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error updating settings:', error);
-      if (error instanceof Error && error.message.includes('Authentication required')) {
+      if (isAuthError(error)) {
         showAlert('error', 'لطفا دوباره وارد شوید');
         setTimeout(() => {
           window.location.href = '/';
         }, 2000);
       } else {
-        showAlert('error', 'خطا در بروزرسانی تنظیمات');
+        showAlert('error', 'خطا در به‌روزرسانی تنظیمات');
       }
       // Revert the setting if there was an error
       setSettings(prev => ({

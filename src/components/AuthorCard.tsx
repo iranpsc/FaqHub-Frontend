@@ -2,14 +2,23 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { User, Question } from '@/services/types';
+import { User } from '@/services/types';
+
+export type AuthorStatType = 'questions' | 'answers' | 'comments';
 
 interface AuthorCardProps {
   author: User;
   onClick?: (author: User) => void;
+  activeStat?: AuthorStatType;
+  onStatClick?: (stat: AuthorStatType) => void;
 }
 
-export function AuthorCard({ author, onClick }: AuthorCardProps) {
+export function AuthorCard({
+  author,
+  onClick,
+  activeStat = 'questions',
+  onStatClick,
+}: AuthorCardProps) {
   const [imageError, setImageError] = useState(false);
 
   const authorImage = imageError || !author.image_url 
@@ -29,8 +38,25 @@ export function AuthorCard({ author, onClick }: AuthorCardProps) {
     setImageError(true);
   };
 
-  const handleQuestionClick = (_question: Question) => {
-    // Navigation is handled by parent / link
+  const handleStatClick = (e: React.MouseEvent, stat: AuthorStatType) => {
+    e.stopPropagation();
+    onStatClick?.(stat);
+  };
+
+  const interactiveClass = onStatClick
+    ? ' cursor-pointer hover:ring-2 hover:ring-offset-1 dark:hover:ring-offset-gray-800'
+    : '';
+
+  const statBoxClass: Record<AuthorStatType, string> = {
+    questions: onStatClick && activeStat === 'questions'
+      ? 'rounded-lg p-3 cursor-pointer transition-all duration-200 bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500 ring-offset-1 dark:ring-offset-gray-800'
+      : `rounded-lg p-3 transition-all duration-200 bg-gray-50 dark:bg-gray-700/50${interactiveClass}${onStatClick ? ' hover:ring-blue-400' : ''}`,
+    answers: onStatClick && activeStat === 'answers'
+      ? 'rounded-lg p-3 cursor-pointer transition-all duration-200 bg-green-50 dark:bg-green-900/30 ring-2 ring-green-500 ring-offset-1 dark:ring-offset-gray-800'
+      : `rounded-lg p-3 transition-all duration-200 bg-gray-50 dark:bg-gray-700/50${interactiveClass}${onStatClick ? ' hover:ring-green-400' : ''}`,
+    comments: onStatClick && activeStat === 'comments'
+      ? 'rounded-lg p-3 cursor-pointer transition-all duration-200 bg-purple-50 dark:bg-purple-900/30 ring-2 ring-purple-500 ring-offset-1 dark:ring-offset-gray-800'
+      : `rounded-lg p-3 transition-all duration-200 bg-gray-50 dark:bg-gray-700/50${interactiveClass}${onStatClick ? ' hover:ring-purple-400' : ''}`,
   };
 
   return (
@@ -78,7 +104,19 @@ export function AuthorCard({ author, onClick }: AuthorCardProps) {
       <div className="px-6 pb-4">
         <div className="grid grid-cols-3 gap-4 text-center">
           {/* Questions Count */}
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+          <div
+            role={onStatClick ? 'button' : undefined}
+            tabIndex={onStatClick ? 0 : undefined}
+            className={statBoxClass.questions}
+            onClick={(e) => onStatClick && handleStatClick(e, 'questions')}
+            onKeyDown={(e) => {
+              if (onStatClick && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                e.stopPropagation();
+                onStatClick('questions');
+              }
+            }}
+          >
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {formatNumber(author.questions_count)}
             </div>
@@ -88,7 +126,19 @@ export function AuthorCard({ author, onClick }: AuthorCardProps) {
           </div>
 
           {/* Answers Count */}
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+          <div
+            role={onStatClick ? 'button' : undefined}
+            tabIndex={onStatClick ? 0 : undefined}
+            className={statBoxClass.answers}
+            onClick={(e) => onStatClick && handleStatClick(e, 'answers')}
+            onKeyDown={(e) => {
+              if (onStatClick && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                e.stopPropagation();
+                onStatClick('answers');
+              }
+            }}
+          >
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {formatNumber(author.answers_count)}
             </div>
@@ -98,7 +148,19 @@ export function AuthorCard({ author, onClick }: AuthorCardProps) {
           </div>
 
           {/* Comments Count */}
-          <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+          <div
+            role={onStatClick ? 'button' : undefined}
+            tabIndex={onStatClick ? 0 : undefined}
+            className={statBoxClass.comments}
+            onClick={(e) => onStatClick && handleStatClick(e, 'comments')}
+            onKeyDown={(e) => {
+              if (onStatClick && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                e.stopPropagation();
+                onStatClick('comments');
+              }
+            }}
+          >
             <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {formatNumber(author.comments_count)}
             </div>
@@ -106,42 +168,6 @@ export function AuthorCard({ author, onClick }: AuthorCardProps) {
               نظرات
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Recent Questions Preview */}
-      <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          آخرین سوالات:
-        </p>
-        <div className="space-y-2">
-          {author.recent_questions && author.recent_questions.length > 0 ? (
-            <>
-              {author.recent_questions.slice(0, 2).map((question) => (
-                <div 
-                  key={question.id} 
-                  className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400
-                           transition-colors duration-200 cursor-pointer truncate"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuestionClick(question);
-                  }}
-                  title={question.title}
-                >
-                  {question.title}
-                </div>
-              ))}
-              {author.recent_questions.length > 2 && (
-                <div className="text-xs text-gray-500 dark:text-gray-500">
-                  و {author.recent_questions.length - 2} سوال دیگر...
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              این کاربر هنوز سوالی نپرسیده است.
-            </div>
-          )}
         </div>
       </div>
     </div>

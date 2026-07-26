@@ -6,7 +6,7 @@ import { Question, User } from '@/services/types';
 
 interface AuthorDetailPageProps {
   params: Promise<{ username: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; type?: string }>;
 }
 
 export async function generateMetadata({ params }: AuthorDetailPageProps): Promise<Metadata> {
@@ -111,11 +111,14 @@ export default async function AuthorDetailPage({ params, searchParams }: AuthorD
   const searchParamsData = await searchParams;
   const authorUsername = resolvedParams.username;
   const page = parseInt(searchParamsData.page || '1', 10);
+  const typeParam = searchParamsData.type;
+  const type =
+    typeParam === 'answers' || typeParam === 'comments' ? typeParam : 'questions';
 
   try {
     const [authorResponse, questionsResponse] = await Promise.all([
       apiService.getAuthorServer(authorUsername),
-      apiService.getAuthorQuestionsServer(authorUsername, page),
+      apiService.getAuthorQuestionsServer(authorUsername, page, type),
     ]);
 
     const questions: AuthorSchemaQuestion[] = questionsResponse.data || [];
@@ -138,6 +141,7 @@ export default async function AuthorDetailPage({ params, searchParams }: AuthorD
           initialQuestions={questions}
           initialPagination={questionsResponse.meta}
           authorUsername={resolvedAuthorUsername}
+          initialType={type}
         />
       </Suspense>
     );
