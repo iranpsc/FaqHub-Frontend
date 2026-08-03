@@ -86,21 +86,25 @@ const defaultOptions: IFilterXSSOptions = {
       return `${name}="${escapeAttrValue(value)}"`;
     }
     
-    // Block javascript: and data: URLs in href/src (except for images)
+    // Block javascript:, vbscript:, and data: URLs in href/src (except for images)
     if ((name === 'href' || name === 'src') && tag !== 'img') {
       const lowerValue = value.toLowerCase().trim();
-      if (lowerValue.startsWith('javascript:') || lowerValue.startsWith('vbscript:')) {
+      if (
+        lowerValue.startsWith('javascript:') ||
+        lowerValue.startsWith('vbscript:') ||
+        lowerValue.startsWith('data:')
+      ) {
         return '';
       }
     }
     
-    // For img src, allow data: URLs for base64 images but block javascript:
+    // For img src, allow data:image/* for base64 images but block other dangerous schemes
     if (tag === 'img' && name === 'src') {
       const lowerValue = value.toLowerCase().trim();
       if (lowerValue.startsWith('javascript:') || lowerValue.startsWith('vbscript:')) {
         return '';
       }
-      // Allow data:image/* URLs
+      // Allow data:image/* URLs only
       if (lowerValue.startsWith('data:') && !lowerValue.startsWith('data:image/')) {
         return '';
       }
@@ -200,6 +204,75 @@ export function escapeHtml(text: string): string {
   };
   
   return text.replace(/[&<>"'/]/g, (char) => htmlEntities[char] || char);
+}
+
+/**
+ * Strip all HTML tags using the xss library (avoids incomplete regex sanitization).
+ * Script/style bodies are removed entirely.
+ */
+export function stripHtmlTags(html: string): string {
+  if (!html || typeof html !== 'string') {
+    return '';
+  }
+
+  return xss(html, {
+    whiteList: {},
+    stripIgnoreTag: true,
+    stripIgnoreTagBody: [
+      'script',
+      'style',
+      'noscript',
+      'iframe',
+      'object',
+      'embed',
+      'form',
+    ],
+  });
+}
+
+/**
+ * Decode common HTML entities without double-unescaping.
+ * `&amp;` is decoded last so sequences like `&amp;lt;` stay as `&lt;`.
+ */
+export function decodeHtmlEntities(text: string): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+
+  if (typeof window !== 'undefined' && typeof DOMParser !== 'undefined') {
+    try {
+      return (
+        new DOMParser().parseFromString(text, 'text/html').documentElement
+          .textContent || ''
+      );
+    } catch {
+      // Fall through to manual decoding
+    }
+  }
+
+  return text
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0*39;/g, "'")
+    .replace(/&apos;/gi, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#x2F;/gi, '/')
+    .replace(/&#x60;/gi, '`')
+    .replace(/&#x3D;/gi, '=')
+    .replace(/&amp;/gi, '&');
+}
+
+/**
+ * Convert HTML to plain text for previews, metadata, and validation.
+ */
+export function htmlToPlainText(html: string): string {
+  if (!html || typeof html !== 'string') {
+    return '';
+  }
+
+  return decodeHtmlEntities(stripHtmlTags(html)).trim();
 }
 
 /**

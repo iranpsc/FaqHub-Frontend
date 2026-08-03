@@ -5,6 +5,7 @@ import { BaseBadge } from './ui/BaseBadge';
 import { BaseAvatar } from './ui/BaseAvatar';
 import clsx from 'clsx';
 import { Question } from '@/services/api';
+import { htmlToPlainText } from '@/lib/sanitize';
 import { useState } from 'react';
 import Link from 'next/link';
 
@@ -25,41 +26,11 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
     }).format(date);
   };
 
-    const getContentPreview = (content: string) => {
-    if (!content) return '';
-
-    // Remove HTML tags
-    const textWithEntities = content.replace(/<[^>]*>/g, '');
-
-    // Decode HTML entities (like &nbsp; &amp; &lt; &gt; ...)
-    let decodedText = '';
-    
-    if (typeof window !== 'undefined' && typeof DOMParser !== 'undefined') {
-      // Browser environment - use DOMParser
-      try {
-        decodedText = new DOMParser().parseFromString(textWithEntities, 'text/html').documentElement.textContent || '';
-      } catch {
-        // Fallback if DOMParser fails
-        decodedText = textWithEntities;
-      }
-    } else {
-      // Server-side: decode common HTML entities manually
-      decodedText = textWithEntities
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&apos;/g, "'")
-        .replace(/&#x27;/g, "'")
-        .replace(/&#x2F;/g, '/')
-        .replace(/&#x60;/g, '`')
-        .replace(/&#x3D;/g, '=');
-    }
-
-    // Limit to 200 chars
-    return decodedText.length > 200 ? decodedText.substring(0, 200) + '...' : decodedText;
+  const getContentPreview = (content: string) => {
+    const decodedText = htmlToPlainText(content);
+    return decodedText.length > 200
+      ? decodedText.substring(0, 200) + '...'
+      : decodedText;
   };
 
 
