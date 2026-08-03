@@ -5,6 +5,7 @@ import { cache } from "react"
 import { apiService } from "@/services/api"
 import QuestionDetailsContent from "@/components/QuestionDetailsContent"
 import { Answer, Question } from "@/services/types"
+import { htmlToPlainText } from "@/lib/sanitize"
 
 // Cache the question fetch to avoid duplicate API calls
 const getQuestion = cache(async (slug: string) => {
@@ -27,10 +28,9 @@ export async function generateMetadata({
   const question = await getQuestion(slug)
 
   const title = question?.title || "سؤال بدون عنوان"
-  const description = question?.content
-    ?.replace(/<[^>]*>/g, "")
-    .slice(0, 160)
-    .trim() || "پرسش و پاسخ در مورد موضوعات مختلف در FAQHub"
+  const description =
+    htmlToPlainText(question?.content || "").slice(0, 160) ||
+    "پرسش و پاسخ در مورد موضوعات مختلف در FAQHub"
   const url = `https://faqhub.ir/questions/${slug}`
 
   return {
@@ -78,13 +78,7 @@ export default async function QuestionDetailsPage({
   const answersResponse = await getAnswers(question.id)
   const answers: Answer[] = answersResponse?.data || []
 
-  // Optimized clean function - use plain text from backend if available
-  const clean = (text: string) => {
-    // If text is already plain (no HTML tags), return as is
-    if (!text.includes('<')) return text.trim();
-    // Otherwise do minimal processing
-    return text.replace(/<[^>]*>/g, "").trim();
-  };
+  const clean = (text: string) => htmlToPlainText(text);
 
 const qaSchema = {
   "@context": "https://schema.org",
