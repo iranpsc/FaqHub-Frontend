@@ -348,7 +348,9 @@ export function Footer({ onAskQuestion }: FooterProps) {
                   variant="outline" 
                   size="lg" 
                   rounded="xl"
-                  className="bg-white/95 text-blue-600 dark:text-blue-700 border-white/90 hover:bg-white hover:shadow-lg transition-all duration-300 font-semibold px-12 py-4 text-lg"
+                  className="bg-white/95 border-white/90 text-gray-800 dark:text-gray-900 transition-all duration-300 font-semibold px-12 py-4 text-lg"
+             
+             
                   onClick={handleAskQuestion}
                 >
                   بپرس

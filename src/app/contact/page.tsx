@@ -143,9 +143,9 @@ export default async function ContactPage() {
                       <div className="flex gap-3 text-center lg:text-right">
                         <a
                           className="text-light-newColors-shades-50 dark:text-white font-medium text-[16px] md:text-[25px] leading-[32px] font-rokh"
-                          href="mailto:info@rgb.irpsc.com"
+                          href="mailto:info@faqhub.ir"
                         >
-                          info@rgb.irpsc.com
+                          info@faqhub.ir
                         </a>
                         <svg className="mt-[2px]" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 22 22" fill="none">
                           <path className="dark:fill-white" d="M15.582 18.7917H6.41536C3.66536 18.7917 1.83203 17.4167 1.83203 14.2084V7.79171C1.83203 4.58337 3.66536 3.20837 6.41536 3.20837H15.582C18.332 3.20837 20.1654 4.58337 20.1654 7.79171V14.2084C20.1654 17.4167 18.332 18.7917 15.582 18.7917Z" stroke="#292D32" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />

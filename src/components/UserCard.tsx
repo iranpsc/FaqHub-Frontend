@@ -2,14 +2,17 @@
 
 import { BaseAvatar } from './ui/BaseAvatar';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { User } from '@/services/api';
 
 interface UserCardProps {
   user: User;
   className?: string;
+  inSlider?: boolean;
 }
 
-export function UserCard({ user, className }: UserCardProps) {
+export function UserCard({ user, className, inSlider = false }: UserCardProps) {
+  const router = useRouter();
   const formatNumber = (number: number | undefined) => {
     if (!number && number !== 0) return '0';
     
@@ -25,9 +28,10 @@ export function UserCard({ user, className }: UserCardProps) {
   // Use username for the link, fall back to id if username is not available
   const authorLink = user.username ? `/authors/${user.username}` : `/authors/${user.id}`;
 
-  return (
-    <Link href={authorLink} className="block h-full">
-      <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col hover:transform hover:-translate-y-0.5 ${className || ''}`}>
+  const cardClassName = `bg-white dark:bg-gray-800 px-2 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 text-center hover:shadow-md transition-all duration-300 cursor-pointer flex flex-col hover:transform hover:-translate-y-0.5 ${className || ''}`;
+
+  const cardContent = (
+      <div className={cardClassName}>
         {/* User Avatar */}
         <div className="mb-3">
           <BaseAvatar 
@@ -46,8 +50,8 @@ export function UserCard({ user, className }: UserCardProps) {
         {/* User Score Badge */}
         <div className="flex justify-center mb-4">
           <span className="inline-flex items-center px-3 py-1 pt-[5px] rounded-full text-gray-800 dark:text-gray-200 text-sm font-bold border border-gray-300 dark:border-gray-500">
-            <span className="font-normal text-xs md:text-sm">{formatNumber(user.score)} : </span>
             <span className="text-xs md:text-sm font-normal">امتیاز</span>
+            <span className="font-normal text-xs md:text-sm mx-1">: {formatNumber(user.score)}</span>
           </span>
         </div>
 
@@ -92,6 +96,7 @@ export function UserCard({ user, className }: UserCardProps) {
             className="flex w-full justify-between items-center px-4 py-3 rounded-lg bg-blue-200 dark:bg-gray-900 text-yellow-400 font-bold transition-colors focus:outline-none gap-2"
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               // TODO: Implement chat functionality
               console.log('Chat with user:', user.name);
             }}
@@ -107,6 +112,30 @@ export function UserCard({ user, className }: UserCardProps) {
           </button>
         </div>
       </div>
+  );
+
+  if (inSlider) {
+    return (
+      <div
+        className="block h-full"
+        onClick={() => router.push(authorLink)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            router.push(authorLink);
+          }
+        }}
+        role="link"
+        tabIndex={0}
+      >
+        {cardContent}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={authorLink} className="block h-full">
+      {cardContent}
     </Link>
   );
 }

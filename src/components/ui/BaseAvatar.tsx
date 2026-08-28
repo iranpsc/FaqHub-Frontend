@@ -1,7 +1,6 @@
 'use client';
 
-import { HTMLAttributes, forwardRef } from 'react';
-import Image from 'next/image';
+import { HTMLAttributes, forwardRef, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { AvatarSvg } from './AvatarSvg';
 
@@ -13,52 +12,60 @@ interface BaseAvatarProps extends HTMLAttributes<HTMLDivElement> {
   status?: 'online' | 'offline' | 'away';
 }
 
+const getApiOrigin = (): string => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  if (baseUrl && !baseUrl.startsWith('/')) {
+    return baseUrl.replace(/\/api\/?$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return 'https://api.faqhub.ir';
+};
+
+export const resolveAvatarSrc = (imageSrc?: string): string | null => {
+  if (!imageSrc || imageSrc.trim() === '') {
+    return null;
+  }
+
+  const trimmed = imageSrc.trim();
+
+  if (
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:') ||
+    /^https?:\/\//i.test(trimmed)
+  ) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith('//')) {
+    return `https:${trimmed}`;
+  }
+
+  const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return `${getApiOrigin()}${path}`;
+};
+
+const getFallbackAvatarUrl = (name: string, pixelSize: number) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=${pixelSize}&background=3b82f6&color=fff&bold=true`;
+
 export const BaseAvatar = forwardRef<HTMLDivElement, BaseAvatarProps>(
-  ({ 
-    src, 
-    name = 'User', 
-    size = 'md', 
-    variant = 'default', 
-    status, 
-    className, 
-    ...props 
+  ({
+    src,
+    name = 'User',
+    size = 'md',
+    variant = 'default',
+    status,
+    className,
+    ...props
   }, ref) => {
-    // Validate and normalize the image URL
-    const isValidUrl = (url: string): boolean => {
-      try {
-        new URL(url);
-        return true;
-      } catch {
-        return false;
-      }
-    };
+    const [imageError, setImageError] = useState(false);
 
-    const getValidImageSrc = (imageSrc?: string): string | null => {
-      if (!imageSrc || imageSrc.trim() === '') {
-        return null;
-      }
+    useEffect(() => {
+      setImageError(false);
+    }, [src]);
 
-      // If it's already a valid absolute URL, return it
-      if (isValidUrl(imageSrc)) {
-        return imageSrc;
-      }
-
-      // If it's a relative URL, try to make it absolute
-      if (imageSrc.startsWith('/')) {
-        // For relative URLs, we need to determine the base URL
-        // This could be the API base URL or the current domain
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
-        if (baseUrl && baseUrl !== '/api') {
-          return `${baseUrl.replace('/api', '')}${imageSrc}`;
-        }
-        return imageSrc; // Return as-is for local development
-      }
-
-      // If it's not a valid URL, return null to fall back to avatar
-      return null;
-    };
-
-    const validSrc = getValidImageSrc(src);
+    const validSrc = resolveAvatarSrc(src);
     const sizeClasses = {
       xs: 'w-6 h-6 text-xs',
       sm: 'w-8 h-8 text-sm',
@@ -88,30 +95,37 @@ export const BaseAvatar = forwardRef<HTMLDivElement, BaseAvatarProps>(
       away: 'bg-yellow-500',
     };
 
+    const displaySrc = imageError || !validSrc
+      ? getFallbackAvatarUrl(name, sizeMap[size] * 2)
+      : validSrc;
 
     return (
       <div
         ref={ref}
         className={clsx(
-          'relative inline-flex items-center justify-center rounded-full font-medium',
+          'relative inline-flex items-center justify-center rounded-full font-medium overflow-hidden shrink-0',
           sizeClasses[size],
-          variantClasses[variant],
+          !validSrc || imageError ? variantClasses[variant] : 'bg-gray-200 dark:bg-gray-700',
           className
         )}
         {...props}
       >
-        {validSrc ? (
-          <Image
-            src={validSrc}
-            alt={'picture' + name || 'picture'}
+        {displaySrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={displaySrc}
+            alt={name}
             width={sizeMap[size]}
             height={sizeMap[size]}
             className="w-full h-full rounded-full object-cover"
+            onError={() => setImageError(true)}
+            loading="lazy"
+            decoding="async"
           />
         ) : (
           <AvatarSvg size={size} className="w-full h-full" />
         )}
-        
+
         {status && (
           <span
             className={clsx(

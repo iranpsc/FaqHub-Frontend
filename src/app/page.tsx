@@ -31,7 +31,7 @@ export default async function HomePage() {
   try {
     const [questionsData, activeUsers] = await Promise.all([
       apiService.getQuestionsServer(),
-      apiService.getActiveUsersServer(5)
+      apiService.getActiveUsersServer(12)
     ]);
 
     const initialQuestions = Array.isArray(questionsData.data) ? questionsData.data : [];

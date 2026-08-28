@@ -467,3 +467,17 @@ a:focus {
     min-height: 200px !important;
   }
 }
+
+.active-users-swiper {
+  padding-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.active-users-swiper .swiper-slide {
+  height: auto;
+  display: flex;
+}
+
+.active-users-swiper .swiper-slide > * {
+  width: 100%;
+}

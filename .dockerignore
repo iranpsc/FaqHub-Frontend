@@ -1,0 +1,41 @@
+# Dependencies & build artifacts (installed/built inside the image)
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+
+# Git & IDE
+.git
+.github
+.cursor
+.gitignore
+.DS_Store
+
+# Env files — pass secrets/config via build-args or runtime env instead
+.env
+.env.*
+!.env.example
+
+# Docs & misc (not needed at build time)
+README.md
+CODE_OF_CONDUCT.md
+Contributing.md
+SECURITY.md
+LICENSE
+PULL_REQUEST_TEMPLATE.md
+*.md
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Docker (avoid recursive context noise)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Local tooling
+ecosystem.config.js
+.eslintrc.production.js

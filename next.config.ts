@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Production optimizations
+  // Standalone output for minimal Docker images (copies only traced deps)
+  output: "standalone",
   compress: true,
   poweredByHeader: false,
   
