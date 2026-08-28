@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Production optimizations
@@ -60,7 +61,8 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https://api.faqhub.ir https://ui-avatars.com https://irpsc.com https://*.irpsc.com",
-      `connect-src 'self' ${isProd ? 'https://api.faqhub.ir' : 'http://localhost:8000'} https://fonts.googleapis.com https://fonts.gstatic.com`,
+      `connect-src 'self' ${isProd ? 'https://api.faqhub.ir' : 'http://localhost:8000'} https://fonts.googleapis.com https://fonts.gstatic.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io`,
+      "worker-src 'self' blob:",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -125,4 +127,11 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  tunnelRoute: "/sentry-tunnel",
+});
