@@ -42,10 +42,6 @@ const {
 } = resolveApiConfig();
 
 const nextConfig: NextConfig = {
-  // Standalone output for production: minimal node_modules, better for PM2/Docker
-  output: 'standalone',
-
-  // Production optimizations
   // Standalone output for minimal Docker images (copies only traced deps)
   output: "standalone",
   compress: true,

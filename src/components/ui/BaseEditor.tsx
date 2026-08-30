@@ -92,6 +92,7 @@ export function BaseEditor({
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const editorRef = useRef<EditorWithExtras | null>(null);
+  const onReadyCleanupRef = useRef<(() => void) | null>(null);
 
   const applyEditorTheme = useCallback((editor: EditorWithExtras, dark: boolean) => {
     const colors = getEditorThemeColors(dark);
