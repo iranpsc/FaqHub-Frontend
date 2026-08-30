@@ -87,9 +87,8 @@ export default function TagContent({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleQuestionClick = (question: Question) => {
-    // TODO: Navigate to question detail page
-    console.log('Question clicked:', question);
+  const handleQuestionClick = (_question: Question) => {
+    // Navigation is handled by ContentArea / link
   };
 
   return (

@@ -5,6 +5,7 @@ import { BaseBadge } from './ui/BaseBadge';
 import { BaseAvatar } from './ui/BaseAvatar';
 import clsx from 'clsx';
 import { Question } from '@/services/api';
+import { htmlToPlainText } from '@/lib/sanitize';
 import { useState } from 'react';
 import Link from 'next/link';
 
@@ -25,41 +26,11 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
     }).format(date);
   };
 
-    const getContentPreview = (content: string) => {
-    if (!content) return '';
-
-    // Remove HTML tags
-    const textWithEntities = content.replace(/<[^>]*>/g, '');
-
-    // Decode HTML entities (like &nbsp; &amp; &lt; &gt; ...)
-    let decodedText = '';
-    
-    if (typeof window !== 'undefined' && typeof DOMParser !== 'undefined') {
-      // Browser environment - use DOMParser
-      try {
-        decodedText = new DOMParser().parseFromString(textWithEntities, 'text/html').documentElement.textContent || '';
-      } catch {
-        // Fallback if DOMParser fails
-        decodedText = textWithEntities;
-      }
-    } else {
-      // Server-side: decode common HTML entities manually
-      decodedText = textWithEntities
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&apos;/g, "'")
-        .replace(/&#x27;/g, "'")
-        .replace(/&#x2F;/g, '/')
-        .replace(/&#x60;/g, '`')
-        .replace(/&#x3D;/g, '=');
-    }
-
-    // Limit to 200 chars
-    return decodedText.length > 200 ? decodedText.substring(0, 200) + '...' : decodedText;
+  const getContentPreview = (content: string) => {
+    const decodedText = htmlToPlainText(content);
+    return decodedText.length > 200
+      ? decodedText.substring(0, 200) + '...'
+      : decodedText;
   };
 
 
@@ -81,11 +52,11 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
 
 
   return (
-    <BaseCard variant="outline" className={cardClassName}>
-      <div className="p-1 md:p-6">
+    <BaseCard variant="outline" className={clsx(cardClassName, 'min-w-0 overflow-hidden')}>
+      <div className="p-1 md:p-6 min-w-0">
         {/* Section 1: Category and Pin Badge (right), Creation Date and Pin Button (left) */}
-        <div className="flex items-center justify-between mb-2 min-h-[32px]">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2 min-h-[32px]">
+          <div className="flex flex-wrap items-center gap-2 mb-4 min-w-0">
             {/* Category Badge */}
             {question.category && (
               <Link className='!outline-0' href={`/categories/${question.category.slug}`}>
@@ -125,7 +96,7 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
             )}
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0">
             {/* Creation Date */}
             <div className="text-sm text-gray-500 dark:text-gray-400">
               {formatDate(question.created_at)}
@@ -134,20 +105,19 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
         </div>
 
         {/* Section 2: Title and Content Preview */}
-        <div className="mb-4 cursor-pointer" onClick={() => onClick?.(question)}>
-          <Link href={`/questions/${question.slug}`}>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 leading-relaxed hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+        <div className="mb-4 cursor-pointer min-w-0" onClick={() => onClick?.(question)}>
+          <Link href={`/questions/${question.slug}`} className="block min-w-0">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 leading-relaxed hover:text-blue-600 dark:hover:text-blue-400 transition-colors break-words overflow-hidden">
               {question.title}
             </h2>
           </Link>
           <div 
-            className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed"
+            className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed break-words overflow-hidden"
             style={{
               display: '-webkit-box',
               WebkitLineClamp: 3,
               lineClamp: 3,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden'
+              WebkitBoxOrient: 'vertical'
             }}
           >
             {getContentPreview(question.content)}
@@ -181,7 +151,7 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
         )}
 
         {/* Section 3: User Info and Stats */}
-        <div className="flex w-full items-center border-t border-gray-200 dark:border-gray-700 pt-4 text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex w-full items-center border-t border-gray-200 dark:border-gray-700 pt-4 text-sm text-gray-500 dark:text-gray-400 min-w-0 overflow-hidden">
           {/* User Info and Stats */}
           <div className="flex items-center flex-wrap gap-6 text-xs md:text-sm">
             {/* User Info */}

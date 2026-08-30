@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface ProgressBarProps {
   isVisible: boolean;
@@ -9,24 +9,30 @@ interface ProgressBarProps {
 
 export function ProgressBar({ isVisible, progress }: ProgressBarProps) {
   const [displayProgress, setDisplayProgress] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (isVisible) {
-      // Reset display progress when starting
       setDisplayProgress(0);
-      
-      // Smooth progress animation
-      const interval = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         setDisplayProgress((prev) => {
           if (prev >= progress) {
-            clearInterval(interval);
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+              intervalRef.current = null;
+            }
             return progress;
           }
           return prev + Math.random() * 10;
         });
       }, 50);
 
-      return () => clearInterval(interval);
+      return () => {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      };
     } else {
       setDisplayProgress(0);
     }

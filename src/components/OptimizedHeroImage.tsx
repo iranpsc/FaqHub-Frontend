@@ -27,11 +27,9 @@ export const OptimizedHeroImage: React.FC<OptimizedHeroImageProps> = ({
         sizes="(max-width: 480px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 80vw, 1200px"
         quality={85}
         
-        style={{ 
-          aspectRatio: '1200/480', 
-         
-          containIntrinsicSize: '1200px 480px', 
-          objectFit: 'cover' 
+        style={{
+          aspectRatio: '1200/480',
+          objectFit: 'cover',
         }}
       
       />

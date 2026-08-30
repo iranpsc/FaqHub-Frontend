@@ -10,16 +10,11 @@ interface FooterProps {
 
 export function Footer({ onAskQuestion }: FooterProps) {
   const handleAskQuestion = () => {
-    if (onAskQuestion) {
-      onAskQuestion();
-    } else {
-      console.log('Ask question clicked - no handler provided');
-    }
+    onAskQuestion?.();
   };
 
   const handleScoring = () => {
     // TODO: Implement scoring info
-    console.log('Scoring info clicked');
   };
 
   return (

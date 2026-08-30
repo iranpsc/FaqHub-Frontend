@@ -26,7 +26,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       questions = categoryData.data || [];
       pagination = categoryData.meta || null;
     } catch {
-      console.log('No questions found for category:', slug);
+      // Use empty questions; meta may still be set from getCategoryServer
     }
 
     // Metadata برای SEO

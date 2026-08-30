@@ -90,10 +90,8 @@ export function CommentsSection({
 
   const formatNumber = (num: number) => new Intl.NumberFormat('fa-IR').format(num);
 
-  const handleCommentVoteChanged = (commentId: string, voteData: VoteData) => {
-    // Note: In the hook-based approach, vote changes are handled by the hook
-    // This function is kept for compatibility but actual updates should be managed by the hook
-    console.log('Vote changed for comment:', commentId, voteData);
+  const handleCommentVoteChanged = (_commentId: string, _voteData: VoteData) => {
+    // Vote changes are reflected by the hook
   };
 
   const submitComment = async () => {
@@ -160,10 +158,11 @@ export function CommentsSection({
       const result = await publishCommentApi(comment.id);
       if (result.success) {
         // Comment published status will be updated by the hook
-        console.log('Comment published successfully:', comment.id);
       }
     } catch (error) {
-      console.error('Error publishing comment:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error publishing comment:', error);
+      }
     } finally {
       setIsPublishingComment(null);
     }

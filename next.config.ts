@@ -42,11 +42,23 @@ const {
 } = resolveApiConfig();
 
 const nextConfig: NextConfig = {
+  // Standalone output for production: minimal node_modules, better for PM2/Docker
+  output: 'standalone',
+
   // Production optimizations
   // Standalone output for minimal Docker images (copies only traced deps)
   output: "standalone",
   compress: true,
   poweredByHeader: false,
+
+  // Cache configuration: revalidate fetch responses for faster repeat requests
+  experimental: {
+    // Enable stale-while-revalidate for server fetches (Next.js 15)
+    staleTimes: {
+      dynamic: 0,
+      static: 180, // 3 minutes for static-like data
+    },
+  },
   
   // Image optimization
   images: {

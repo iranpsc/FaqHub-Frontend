@@ -140,8 +140,8 @@ export default function QuestionDetailsContent({ slug, initialQuestion, initialA
     }
   };
 
-  const handleAnswerCommentAdded = (commentData: CommentData) => {
-    console.log('Comment added to answer:', commentData);
+  const handleAnswerCommentAdded = (_commentData: CommentData) => {
+    // Comment list is updated by the answers/comments hook
   };
 
   const handleEdit = () => setShowEditModal(true);

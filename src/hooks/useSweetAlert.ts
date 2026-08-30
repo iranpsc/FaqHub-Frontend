@@ -27,8 +27,6 @@ export function useSweetAlert() {
   }, []);
 
   const showAuthenticationDialog = useCallback(async (onLogin: () => Promise<void>) => {
-    console.log('showAuthenticationDialog called'); // Debug log
-    
     const isDark = isDarkMode();
     
     const result = await Swal.fire({
@@ -52,30 +50,24 @@ export function useSweetAlert() {
       color: isDark ? '#f9fafb' : '#171717',
       preConfirm: async () => {
         try {
-          console.log('Login button clicked'); // Debug log
           await onLogin();
           return true;
         } catch (error) {
-          console.error('Login error:', error);
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Login error:', error);
+          }
           Swal.showValidationMessage('خطا در ورود. لطفاً دوباره تلاش کنید.');
           return false;
         }
       }
     });
 
-    console.log('SweetAlert result:', result); // Debug log
-
     if (result.isConfirmed) {
-      console.log('Login confirmed'); // Debug log
       // Login was initiated in preConfirm
-    } else {
-      console.log('Dialog dismissed:', result.dismiss); // Debug log
     }
   }, []);
 
   const showRegisterRedirect = useCallback(async () => {
-    console.log('showRegisterRedirect called'); // Debug log
-    
     const isDark = isDarkMode();
     
     // Show loading dialog
@@ -96,9 +88,7 @@ export function useSweetAlert() {
     try {
       // Wait a bit to show the loading state
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log('Opening registration page...'); // Debug log
-      
+
       // Try to open the registration page in a new tab
       const registrationUrl = 'https://accounts.irpsc.com/register';
       const newWindow = window.open(registrationUrl, '_blank', 'noopener,noreferrer');
@@ -108,8 +98,6 @@ export function useSweetAlert() {
       
       if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
         // Popup was blocked or failed, redirect in the same window
-        console.log('Popup blocked or failed, redirecting in same window');
-        // Small delay to ensure dialog closes
         await new Promise(resolve => setTimeout(resolve, 200));
         window.location.href = registrationUrl;
         return;
@@ -118,7 +106,9 @@ export function useSweetAlert() {
       // Successfully opened in new tab, close the dialog
       // The dialog is already closed above
     } catch (error) {
-      console.error('Register redirect error:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Register redirect error:', error);
+      }
       Swal.close();
       
       // Show error dialog

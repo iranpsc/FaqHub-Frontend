@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useRef, useEffect } from 'react';
 
 interface ProgressContextType {
   isVisible: boolean;
@@ -20,6 +20,16 @@ interface ProgressProviderProps {
 export function ProgressProvider({ children }: ProgressProviderProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [progress, setProgress] = useState(0);
+  const completeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (completeTimeoutRef.current) {
+        clearTimeout(completeTimeoutRef.current);
+        completeTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const startProgress = useCallback(() => {
     setIsVisible(true);
@@ -27,10 +37,15 @@ export function ProgressProvider({ children }: ProgressProviderProps) {
   }, []);
 
   const completeProgress = useCallback(() => {
+    if (completeTimeoutRef.current) {
+      clearTimeout(completeTimeoutRef.current);
+      completeTimeoutRef.current = null;
+    }
     setProgress(100);
-    setTimeout(() => {
+    completeTimeoutRef.current = setTimeout(() => {
       setIsVisible(false);
       setProgress(0);
+      completeTimeoutRef.current = null;
     }, 200);
   }, []);
 

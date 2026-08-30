@@ -98,7 +98,6 @@ export function UserCard({ user, className, inSlider = false }: UserCardProps) {
               e.preventDefault();
               e.stopPropagation();
               // TODO: Implement chat functionality
-              console.log('Chat with user:', user.name);
             }}
           >
             <div>

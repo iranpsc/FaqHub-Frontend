@@ -12,6 +12,7 @@ import { useTags } from '@/hooks/useTags';
 import { Question, Category, Tag, ApiParams } from '@/services/types';
 import Swal from 'sweetalert2';
 import { apiService } from '@/services/api';
+import { htmlToPlainText } from '@/lib/sanitize';
 
 interface QuestionModalProps {
   visible: boolean;
@@ -154,7 +155,7 @@ export function QuestionModal({
     }
 
     // Check if content has actual text (not just HTML tags)
-    const textContent = form.content.replace(/<[^>]*>/g, '').trim();
+    const textContent = htmlToPlainText(form.content);
     if (!textContent) {
       newErrors.content = 'لطفا شرح سوال را وارد کنید';
     }

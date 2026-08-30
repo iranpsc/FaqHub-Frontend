@@ -1,41 +1,56 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 
 export function NavigationProgress() {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const pathname = usePathname();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nestedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // Start loading when pathname changes
     setIsLoading(true);
     setProgress(0);
 
-    // Simulate progress
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 90) {
-          clearInterval(interval);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
           return 90;
         }
         return prev + Math.random() * 15;
       });
     }, 100);
 
-    // Complete after a delay
-    const timeout = setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setProgress(100);
-      setTimeout(() => {
+      nestedTimeoutRef.current = setTimeout(() => {
         setIsLoading(false);
         setProgress(0);
+        nestedTimeoutRef.current = null;
       }, 200);
+      timeoutRef.current = null;
     }, 600);
 
     return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      if (nestedTimeoutRef.current) {
+        clearTimeout(nestedTimeoutRef.current);
+        nestedTimeoutRef.current = null;
+      }
     };
   }, [pathname]);
 
