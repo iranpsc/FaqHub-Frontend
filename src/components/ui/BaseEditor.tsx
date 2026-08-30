@@ -93,11 +93,20 @@ export function BaseEditor({
     const colors = getEditorThemeColors(dark);
     const editableElement = editor.ui.view.editable.element;
     const toolbarElement = editor.ui.view.toolbar.element;
+    const editorRoot = editableElement?.closest('.ck-editor') as HTMLElement | null;
+
+    if (editorRoot) {
+      editorRoot.style.setProperty('--ck-color-base-background', colors.editableBg);
+      editorRoot.style.setProperty('--ck-color-text', colors.editableColor);
+      editorRoot.style.setProperty('--ck-color-toolbar-background', colors.toolbarBg);
+      editorRoot.style.setProperty('--ck-color-toolbar-border', colors.toolbarBorder);
+    }
 
     if (editableElement) {
       editableElement.style.backgroundColor = colors.editableBg;
       editableElement.style.color = colors.editableColor;
       editableElement.style.borderColor = colors.editableBorder;
+      editableElement.style.caretColor = colors.editableColor;
     }
 
     if (toolbarElement) {
@@ -245,7 +254,7 @@ export function BaseEditor({
 
   if (!isClient || !editorLoaded) {
     return (
-      <div className={`border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 transition-colors duration-200 ${className}`}>
+      <div className={`base-editor border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 transition-colors duration-200 ${className}`}>
         <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-8">
           <div className="text-gray-500 dark:text-gray-400">در حال بارگذاری ویرایشگر...</div>
         </div>
@@ -254,7 +263,7 @@ export function BaseEditor({
   }
 
   return (
-    <div className={`border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 transition-colors duration-200 ${className}`}>
+    <div className={`base-editor border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 transition-colors duration-200 ${className}`}>
       {ClassicEditor && (
         <CKEditor
           editor={ClassicEditor as never}

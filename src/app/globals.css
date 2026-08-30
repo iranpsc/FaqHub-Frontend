@@ -468,6 +468,75 @@ a:focus {
   }
 }
 
+/* CKEditor dark mode — override theme CSS variables and editable text */
+.dark .base-editor .ck.ck-editor {
+  --ck-color-base-background: #1f2937;
+  --ck-color-base-border: #4b5563;
+  --ck-color-base-foreground: #374151;
+  --ck-color-text: #f3f4f6;
+  --ck-color-focus-border: #60a5fa;
+  --ck-color-toolbar-background: #374151;
+  --ck-color-toolbar-border: #4b5563;
+  --ck-color-button-default-background: #374151;
+  --ck-color-button-default-hover-background: #4b5563;
+  --ck-color-button-default-active-background: #6b7280;
+  --ck-color-button-on-background: #6b7280;
+  --ck-color-button-on-hover-background: #4b5563;
+  --ck-color-button-on-active-background: #4b5563;
+  --ck-color-button-on-color: #f3f4f6;
+  --ck-color-dropdown-panel-background: #374151;
+  --ck-color-dropdown-panel-border: #4b5563;
+  --ck-color-input-background: #1f2937;
+  --ck-color-input-text: #f3f4f6;
+  --ck-color-input-border: #4b5563;
+  --ck-color-list-background: #374151;
+  --ck-color-list-button-hover-background: #4b5563;
+  --ck-color-list-button-on-background: #6b7280;
+  --ck-color-list-button-on-text: #f3f4f6;
+}
+
+.dark .base-editor .ck.ck-editor__editable:not(.ck-editor__nested-editable),
+.dark .base-editor .ck-editor__editable {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+  caret-color: #f3f4f6;
+}
+
+.dark .base-editor .ck.ck-editor__editable:not(.ck-editor__nested-editable).ck-blurred::before,
+.dark .base-editor .ck-editor__editable.ck-blurred::before {
+  color: #9ca3af !important;
+}
+
+.dark .base-editor .ck.ck-editor__editable p,
+.dark .base-editor .ck.ck-editor__editable li,
+.dark .base-editor .ck.ck-editor__editable span,
+.dark .base-editor .ck.ck-editor__editable div {
+  color: inherit;
+}
+
+.dark .base-editor .ck.ck-toolbar {
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+.dark .base-editor .ck.ck-button {
+  color: #f3f4f6 !important;
+}
+
+.dark .base-editor .ck.ck-button:not(.ck-disabled):hover {
+  background: #4b5563 !important;
+}
+
+.dark .base-editor .ck.ck-button.ck-on {
+  background: #6b7280 !important;
+  color: #f3f4f6 !important;
+}
+
+.dark .base-editor .ck.ck-dropdown__panel {
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
 .active-users-swiper {
   padding-bottom: 0.5rem;
   overflow: hidden;
