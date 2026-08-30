@@ -103,7 +103,7 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       `img-src 'self' data: blob: ${backendOrigin} https://ui-avatars.com https://irpsc.com https://*.irpsc.com`,
-      `connect-src 'self'${isRelativeApiUrl ? "" : ` ${backendOrigin}`} https://fonts.googleapis.com https://fonts.gstatic.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io`,
+      `connect-src 'self'${isRelativeApiUrl ? "" : ` ${backendOrigin}`} https://fonts.googleapis.com https://fonts.gstatic.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://sentry.irpsc.com`,
       "worker-src 'self' blob:",
       "frame-ancestors 'none'",
       "base-uri 'self'",
