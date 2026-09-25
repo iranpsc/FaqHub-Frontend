@@ -3,6 +3,7 @@
 import { BaseCard } from './ui/BaseCard';
 import { BaseBadge } from './ui/BaseBadge';
 import { BaseAvatar } from './ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import clsx from 'clsx';
 import { Question } from '@/services/api';
 import { htmlToPlainText } from '@/lib/sanitize';
@@ -161,7 +162,7 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
                 className="flex items-center gap-2 hover:underline text-blue-600 dark:text-blue-500"
               >
                 <BaseAvatar 
-                  src={question.user.image_url} 
+                  src={userAvatarSrc(question.user)} 
                   name={question.user.name} 
                   size="sm" 
                 />

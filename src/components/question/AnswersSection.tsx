@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { BaseAvatar } from '../ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import { VoteButtons } from '../ui/VoteButtons';
 import { BaseEditor } from '../ui/BaseEditor';
 import { SanitizedContent } from '../ui/SanitizedContent';
@@ -480,7 +481,7 @@ export function AnswersSection({
                       title={`نمایش پروفایل ${answer.user?.name || ''}`}
                     >
                       <BaseAvatar
-                        src={answer.user?.image_url}
+                        src={userAvatarSrc(answer.user)}
                         name={answer.user?.name}
                         size="md"
                         className="transition-transform group-hover:scale-105"

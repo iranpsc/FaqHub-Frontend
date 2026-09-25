@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { BaseAvatar } from '@/components/ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import { VoteButtons } from '../ui/VoteButtons';
 import { SanitizedContent } from '../ui/SanitizedContent';
 import { useAuth } from '@/contexts/AuthContext';
@@ -281,7 +282,7 @@ export function QuestionContent({
             >
               <div className="flex gap-2">
                 <BaseAvatar 
-                  src={question.user.image_url} 
+                  src={userAvatarSrc(question.user)} 
                   name={question.user.name} 
                   size="lg" 
                   className="transition-transform group-hover:scale-105" 

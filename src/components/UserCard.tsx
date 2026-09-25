@@ -1,6 +1,7 @@
 'use client';
 
 import { BaseAvatar } from './ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { User } from '@/services/api';
@@ -35,7 +36,7 @@ export function UserCard({ user, className, inSlider = false }: UserCardProps) {
         {/* User Avatar */}
         <div className="mb-3">
           <BaseAvatar 
-            src={user.image_url} 
+            src={userAvatarSrc(user)} 
             name={user.name} 
             size="2xl" 
             className="mx-auto" 

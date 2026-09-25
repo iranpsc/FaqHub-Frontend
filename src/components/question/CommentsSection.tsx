@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BaseAvatar } from '../ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import { VoteButtons } from '../ui/VoteButtons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useComments } from '../../hooks/useComments';
@@ -210,7 +211,7 @@ export function CommentsSection({
                     title={`نمایش پروفایل ${comment.user?.name || ''}`}
                   >
                     <BaseAvatar
-                      src={comment.user?.image_url}
+                      src={userAvatarSrc(comment.user)}
                       name={comment.user?.name}
                       size={parentType === 'question' ? 'sm' : 'xs'}
                       className="transition-transform group-hover:scale-105"

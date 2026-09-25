@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { BaseButton } from '@/components/ui/BaseButton';
 import { BaseAvatar } from '@/components/ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import { BaseBadge } from '@/components/ui/BaseBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import clsx from 'clsx';
@@ -300,7 +301,7 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
                   className="flex items-center gap-3 w-full p-2 rounded-lg transition-colors outline-none focus:outline-none focus:ring-0 focus:border-0"
                 >
                   <BaseAvatar 
-                    src={user?.image_url} 
+                    src={userAvatarSrc(user)} 
                     name={user?.name || 'User'} 
                     size="md"
                     status="online"
@@ -369,7 +370,7 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
               /* Collapsed view - just avatar */
               <div className="flex items-center justify-center">
                 <BaseAvatar 
-                  src={user?.image_url} 
+                  src={userAvatarSrc(user)} 
                   name={user?.name || 'User'} 
                   size="md"
                   status="online"
