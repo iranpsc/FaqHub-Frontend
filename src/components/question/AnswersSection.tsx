@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { BaseAvatar } from '../ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import { VoteButtons } from '../ui/VoteButtons';
 import { BaseEditor } from '../ui/BaseEditor';
 import { SanitizedContent } from '../ui/SanitizedContent';
@@ -115,12 +116,52 @@ export function AnswersSection({
 
   const formatNumber = (num: number) => new Intl.NumberFormat('fa-IR').format(num);
 
-  const formatDate = (dateString: string) => {
+  const formatRelativeDate = (dateString: string) => {
+    const englishAgoMatch = dateString.match(/^(\d+)\s+(second|minute|hour|day|week|month|year)s?\s+ago$/i);
+    if (englishAgoMatch) {
+      const [, amount, unit] = englishAgoMatch;
+      const unitMap: Record<string, string> = {
+        second: 'ثانیه',
+        minute: 'دقیقه',
+        hour: 'ساعت',
+        day: 'روز',
+        week: 'هفته',
+        month: 'ماه',
+        year: 'سال',
+      };
+      return `${amount} ${unitMap[unit.toLowerCase()]} پیش`;
+    }
+
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return dateString.replace(/\s*ago\s*/gi, ' پیش');
+    }
+
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+    if (diffInMinutes < 1) {
+      return 'همین الان';
+    }
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} دقیقه پیش`;
+    }
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours} ساعت پیش`;
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) {
+      return `${diffInDays} روز پیش`;
+    }
+
     return new Intl.DateTimeFormat('fa-IR', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
-    }).format(new Date(dateString));
+      day: 'numeric',
+    }).format(date);
   };
 
   const canUpdate = (answer: Answer) => {
@@ -432,7 +473,7 @@ export function AnswersSection({
               className={"bg-white dark:bg-gray-800 rounded-lg shadow-sm w-full min-w-0 overflow-hidden"}
             >
               <div className={`p-4 sm:p-8 ${answer.is_correct ? 'bg-green-50 dark:bg-green-900/20' : ''}`}>
-                <div className="flex items-start gap-5 min-w-0">
+                <div className="flex items-start gap-3 sm:gap-5 min-w-0">
                   {answer.user ? (
                     <Link
                       href={`/authors/${answer.user?.username ?? answer.user?.id}`}
@@ -440,7 +481,7 @@ export function AnswersSection({
                       title={`نمایش پروفایل ${answer.user?.name || ''}`}
                     >
                       <BaseAvatar
-                        src={answer.user?.image_url}
+                        src={userAvatarSrc(answer.user)}
                         name={answer.user?.name}
                         size="md"
                         className="transition-transform group-hover:scale-105"
@@ -456,7 +497,7 @@ export function AnswersSection({
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex flex-row sm:flex-row justify-between gap-2">
                       <div className="flex flex-col justify-start min-w-0">
                         {answer.user ? (
                           <Link
@@ -475,50 +516,50 @@ export function AnswersSection({
                         </span>
                       </div>
                       <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                        {formatDate(answer.created_at)}
+                        {formatRelativeDate(answer.created_at)}
                       </span>
                     </div>
-
-                    {/* Answer Content */}
-                    {editingAnswer !== answer.id ? (
-                      <div className="mt-4 sm:mt-6 overflow-hidden">
-                        <SanitizedContent
-                          content={answer.content}
-                          className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 break-words"
-                        />
-                      </div>
-                    ) : (
-                      <div className="mt-6">
-                        <BaseEditor
-                          value={editContent}
-                          onChange={setEditContent}
-                          placeholder="پاسخ خود را ویرایش کنید..."
-                          imageUpload={true}
-                          rtl={true}
-                        />
-                        <div className="flex gap-2 mt-3">
-                          <button
-                            onClick={() => saveEdit(answer)}
-                            disabled={!editContent.trim() || isUpdatingAnswer}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
-                          >
-                            {isUpdatingAnswer ? 'در حال ذخیره...' : 'ذخیره'}
-                          </button>
-                          <button
-                            onClick={cancelEdit}
-                            className="px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
-                          >
-                            انصراف
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
+
+                {/* Answer Content - full row on small screens */}
+                {editingAnswer !== answer.id ? (
+                  <div className="mt-4 sm:mt-6 w-full overflow-hidden">
+                    <SanitizedContent
+                      content={answer.content}
+                      className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 break-words"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-4 sm:mt-6 w-full">
+                    <BaseEditor
+                      value={editContent}
+                      onChange={setEditContent}
+                      placeholder="پاسخ خود را ویرایش کنید..."
+                      imageUpload={true}
+                      rtl={true}
+                    />
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => saveEdit(answer)}
+                        disabled={!editContent.trim() || isUpdatingAnswer}
+                        className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
+                      >
+                        {isUpdatingAnswer ? 'در حال ذخیره...' : 'ذخیره'}
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className="px-4 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+                      >
+                        انصراف
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-700/50 px-4 sm:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-2 sm:gap-6 flex-wrap">
+              <div className="bg-gray-50 dark:bg-gray-700/50 px-4 sm:px-8 py-4 flex flex-row flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 sm:gap-6 flex-wrap min-w-0">
                   {answer.is_correct && (
                     <span className="text-sm font-medium text-green-600 dark:text-green-400 whitespace-nowrap">
                       تایید شده
@@ -582,7 +623,7 @@ export function AnswersSection({
                 </div>
 
                 {/* Voting Section */}
-                <div className="flex justify-start sm:justify-end">
+                <div className="flex justify-end flex-shrink-0">
                   <VoteButtons
                     resourceType="answer"
                     resourceId={answer.id}

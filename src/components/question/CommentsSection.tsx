@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { BaseAvatar } from '../ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import { VoteButtons } from '../ui/VoteButtons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useComments } from '../../hooks/useComments';
@@ -210,7 +211,7 @@ export function CommentsSection({
                     title={`نمایش پروفایل ${comment.user?.name || ''}`}
                   >
                     <BaseAvatar
-                      src={comment.user?.image_url}
+                      src={userAvatarSrc(comment.user)}
                       name={comment.user?.name}
                       size={parentType === 'question' ? 'sm' : 'xs'}
                       className="transition-transform group-hover:scale-105"
@@ -224,12 +225,12 @@ export function CommentsSection({
                     className="flex-shrink-0"
                   />
                 )}
-                
+
                 <div className="flex-1 min-w-0">
                   <div className={`${
                     parentType === 'question'
-                      ? 'flex flex-wrap items-center gap-2 mb-2'
-                      : 'flex flex-wrap items-center gap-2 mb-1'
+                      ? 'flex flex-wrap items-center gap-2'
+                      : 'flex flex-wrap items-center gap-2'
                   }`}>
                     {comment.user ? (
                       <Link
@@ -251,7 +252,7 @@ export function CommentsSection({
                         کاربر ناشناس
                       </span>
                     )}
-                    
+
                     <span className="text-xs text-gray-500 whitespace-nowrap">
                       امتیاز: {formatNumber(comment.user?.score || 0)}
                     </span>
@@ -263,54 +264,58 @@ export function CommentsSection({
                       </span>
                     )}
                   </div>
+                </div>
+              </div>
 
-                  {/* Comment Content */}
-                  {editingComment !== comment.id ? (
-                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed break-words overflow-wrap-anywhere">
-                      {comment.content}
-                    </p>
-                  ) : (
-                    <div className={`${parentType === 'question' ? 'mb-3' : 'mb-2'}`}>
-                      <textarea
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        rows={parentType === 'question' ? 3 : 2}
-                        className={`${
-                          parentType === 'question'
-                            ? 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm resize-none'
-                            : 'w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm resize-none'
-                        }`}
-                      />
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          onClick={() => saveEdit(comment)}
-                          disabled={!editContent.trim() || isUpdating}
-                          className={`${
-                            parentType === 'question'
-                              ? 'px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50'
-                              : 'px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50'
-                          }`}
-                        >
-                          {isUpdating ? 'در حال ذخیره...' : 'ذخیره'}
-                        </button>
-                        <button
-                          onClick={cancelEdit}
-                          className={`${
-                            parentType === 'question'
-                              ? 'px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600'
-                              : 'px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600'
-                          }`}
-                        >
-                          انصراف
-                        </button>
-                      </div>
-                    </div>
-                  )}
+              {/* Comment Content - full row */}
+              {editingComment !== comment.id ? (
+                <p className="mt-2 w-full text-gray-700 dark:text-gray-300 text-sm leading-relaxed break-words overflow-wrap-anywhere">
+                  {comment.content}
+                </p>
+              ) : (
+                <div className={`mt-2 w-full ${parentType === 'question' ? 'mb-3' : 'mb-2'}`}>
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    rows={parentType === 'question' ? 3 : 2}
+                    className={`${
+                      parentType === 'question'
+                        ? 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm resize-none'
+                        : 'w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-sm resize-none'
+                    }`}
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => saveEdit(comment)}
+                      disabled={!editContent.trim() || isUpdating}
+                      className={`${
+                        parentType === 'question'
+                          ? 'px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50'
+                          : 'px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50'
+                      }`}
+                    >
+                      {isUpdating ? 'در حال ذخیره...' : 'ذخیره'}
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className={`${
+                        parentType === 'question'
+                          ? 'px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600'
+                          : 'px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600'
+                      }`}
+                    >
+                      انصراف
+                    </button>
+                  </div>
+                </div>
+              )}
 
-                  {/* Actions */}
-                  <div className={`${
-                    parentType === 'question' ? 'flex items-center gap-4 mt-2' : 'flex items-center gap-3 mt-2'
-                  }`}>
+              {/* Actions - full row */}
+              <div className={`${
+                parentType === 'question'
+                  ? 'flex flex-row flex-wrap items-center justify-between gap-3 mt-2 w-full'
+                  : 'flex flex-row flex-wrap items-center justify-between gap-2 mt-2 w-full'
+              }`}>
                     {/* Publish */}
                     <div className="flex items-center gap-2">
                       {!comment.published && (
@@ -365,8 +370,6 @@ export function CommentsSection({
                         </button>
                       </div>
                     )}
-                  </div>
-                </div>
               </div>
             </div>
           ))

@@ -208,5 +208,146 @@ Set at minimum:
 - **Internal knowledge base** where senior staff curate and publish content created by juniors
 - **Education Q&A** where instructors mark correct answers and surface curated content
 
+## Deployment (Production Server)
+
+This frontend is a **Next.js 15** app. In production it listens on **port 3005** and talks to the FAQ API (`NEXT_PUBLIC_API_URL`, default `https://api.faqhub.ir/api`).
+
+**Recommended approach:** Docker. **Alternative:** Node + PM2 on the host.
+
+### Prerequisites
+
+- Linux server with Docker Engine + Docker Compose **or** Node.js 20+ and npm
+- Git access to this repository
+- Firewall/reverse proxy allowing inbound HTTPS (and optionally SSH)
+- Outbound HTTPS to the API host (`api.faqhub.ir` or your own API)
+
+### Environment variables
+
+| Variable | When | Description |
+|----------|------|-------------|
+| `NEXT_PUBLIC_API_URL` | **Build time** (required for client) | Public API base URL, e.g. `https://api.faqhub.ir/api` |
+| `NODE_ENV` | Runtime | Must be `production` |
+| `PORT` | Runtime | App port (default `3005`) |
+| `HOSTNAME` | Runtime (Docker) | Bind address; use `0.0.0.0` in containers |
+| `NEXT_PUBLIC_SITE_URL` | Optional | Canonical site URL for SEO/metadata |
+
+> `NEXT_PUBLIC_*` values are inlined into the client bundle at **build** time. Changing them later requires a rebuild (or a new image), not only a container restart.
+
+### Option A — Docker (recommended)
+
+1. **Clone and enter the project** on the server:
+   ```bash
+   git clone https://github.com/iranpsc/faq-frontend.git
+   cd faq-frontend
+   git checkout main   # or your release tag/branch
+   ```
+
+2. **Set production API URL** (optional override) in `docker-compose.yml` under `build.args` and `environment`, or pass build args:
+   ```bash
+   docker compose build --build-arg NEXT_PUBLIC_API_URL=https://api.faqhub.ir/api
+   ```
+
+3. **Build and start** in detached mode:
+   ```bash
+   docker compose up --build -d
+   ```
+
+4. **Verify**:
+   ```bash
+   docker compose ps
+   docker compose logs -f --tail=100
+   curl -I http://127.0.0.1:3005/
+   ```
+   Expect the container status `healthy` and HTTP `200` from the homepage.
+
+5. **Updates / redeploy**:
+   ```bash
+   git pull
+   docker compose up --build -d
+   ```
+
+6. **Stop**:
+   ```bash
+   docker compose down
+   ```
+
+The image uses a multi-stage build with Next.js `output: "standalone"`, runs as a non-root user, exposes **3005**, and includes a healthcheck on `/`.
+
+### Option B — Node.js + PM2
+
+Use this if you prefer running the app directly on the host (see `ecosystem.config.js`).
+
+1. **Install dependencies and build**:
+   ```bash
+   git clone https://github.com/iranpsc/faq-frontend.git
+   cd faq-frontend
+   npm ci
+   export NODE_ENV=production
+   export NEXT_PUBLIC_API_URL=https://api.faqhub.ir/api
+   npm run build
+   ```
+
+2. **Start with PM2**:
+   ```bash
+   npm install -g pm2
+   mkdir -p logs
+   pm2 start ecosystem.config.js --env production
+   pm2 save
+   pm2 startup    # enable start on reboot (follow printed instructions)
+   ```
+
+3. **Useful PM2 commands**:
+   ```bash
+   pm2 status
+   pm2 logs faq-frontend
+   pm2 reload ecosystem.config.js --env production   # zero-downtime reload after rebuild
+   ```
+
+4. **Redeploy**:
+   ```bash
+   git pull
+   npm ci
+   NEXT_PUBLIC_API_URL=https://api.faqhub.ir/api npm run build
+   pm2 reload ecosystem.config.js --env production
+   ```
+
+### Reverse proxy (HTTPS)
+
+Do not expose port 3005 publicly if you terminate TLS at a reverse proxy. Point your domain at the proxy and forward to `http://127.0.0.1:3005`.
+
+**Nginx example:**
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name faqhub.ir www.faqhub.ir;
+
+    # ssl_certificate     /path/to/fullchain.pem;
+    # ssl_certificate_key /path/to/privkey.pem;
+
+    location / {
+        proxy_pass http://127.0.0.1:3005;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+Reload Nginx after changes: `sudo nginx -t && sudo systemctl reload nginx`.
+
+### Checklist before go-live
+
+- [ ] `NEXT_PUBLIC_API_URL` points at the production API and the app was **rebuilt** with that value  
+- [ ] Homepage returns `200` on `http://127.0.0.1:3005/`  
+- [ ] HTTPS reverse proxy is configured; HTTP redirects to HTTPS if required  
+- [ ] Process manager (Docker `restart: unless-stopped` or PM2 startup) survives reboot  
+- [ ] API CORS / CSP allow this frontend origin  
+- [ ] Logs are monitored (`docker compose logs` or `pm2 logs`)
+
 ## License
 This project is open-sourced software licensed under the MIT license.

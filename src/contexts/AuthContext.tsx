@@ -9,6 +9,8 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isLoginLoading: boolean;
+  isLogoutLoading: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
@@ -29,6 +31,8 @@ export function AuthProvider({ children, initialUser = null, initialToken = null
   const [user, setUser] = useState<User | null>(initialUser);
   const [token, setTokenState] = useState<string | null>(initialToken);
   const [isLoading, setIsLoading] = useState(() => !(initialUser && initialToken));
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [isLogoutLoading, setIsLogoutLoading] = useState(false);
   
   // Track prior auth state to emit login/logout only on transitions
   const wasAuthenticatedRef = useRef(Boolean(initialToken && initialUser));
@@ -263,6 +267,7 @@ export function AuthProvider({ children, initialUser = null, initialToken = null
 
   // Login function
   const login = async () => {
+    setIsLoginLoading(true);
     try {
       // Send current path as intended URL to backend
       const intendedUrl = window.location.href;
@@ -285,12 +290,14 @@ export function AuthProvider({ children, initialUser = null, initialToken = null
       }
     } catch (error) {
       console.error('Login error:', error);
+      setIsLoginLoading(false);
       throw error;
     }
   };
 
   // Logout function
   const logout = async () => {
+    setIsLogoutLoading(true);
     if (token) {
       try {
         const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -317,6 +324,7 @@ export function AuthProvider({ children, initialUser = null, initialToken = null
 
     // Broadcast logout so any listener can react
     dispatchAuthEvent('auth:logout');
+    setIsLogoutLoading(false);
   };
 
   // Update user data
@@ -417,6 +425,8 @@ export function AuthProvider({ children, initialUser = null, initialToken = null
     user,
     isAuthenticated,
     isLoading,
+    isLoginLoading,
+    isLogoutLoading,
     login,
     logout,
     updateUser,

@@ -3,7 +3,8 @@ export interface AuthUser {
   name: string;
   email?: string;
   mobile?: string;
-  image_url?: string;
+  image?: string | null;
+  image_url?: string | null;
   score?: number;
   online?: boolean;
   login_notification_enabled?: boolean;

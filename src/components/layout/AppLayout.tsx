@@ -25,8 +25,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     // Mark as mounted to prevent hydration mismatch
     setMounted(true);
     
-    // Set initial sidebar state based on screen size
-    const isLargeScreen = window.innerWidth >= 1024;
+    // Set initial sidebar state — open only on xl+ screens; closed on medium/tablet
+    const isLargeScreen = window.innerWidth >= 1280;
     setSidebarOpen(isLargeScreen);
 
     // Initialize theme
@@ -52,7 +52,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
     // Handle resize
     const handleResize = () => {
-      const isLargeScreen = window.innerWidth >= 1024;
+      const isLargeScreen = window.innerWidth >= 1280;
       setSidebarOpen(isLargeScreen);
     };
 
@@ -125,8 +125,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         className={clsx(
           'flex flex-col flex-grow transition-colors duration-300 mr-0',
           {
-            'lg:mr-80': !mounted || sidebarOpen,
-            'lg:mr-16': mounted && !sidebarOpen
+            'xl:mr-80': !mounted || sidebarOpen,
+            'xl:mr-16': mounted && !sidebarOpen
           }
         )}
         style={{ width: '-webkit-fill-available' }}
@@ -158,7 +158,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {mounted && sidebarOpen && (
         <div 
           onClick={closeSidebar} 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 xl:hidden"
         />
       )}
 

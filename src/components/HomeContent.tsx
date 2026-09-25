@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ContentArea } from '@/components/ContentArea';
+import { ActiveUsersSlider } from '@/components/ActiveUsersSlider';
 import { PopularCategories } from '@/components/PopularCategories';
 import { FilterQuestion } from '@/components/FilterQuestion';
 import { QuestionCard } from '@/components/QuestionCard';
-import { UserCard } from '@/components/UserCard';
 import { HomeSidebar } from '@/components/HomeSidebar';
 import { BaseAlert } from '@/components/ui/BaseAlert';
 import { BasePagination } from '@/components/ui/BasePagination';
@@ -14,6 +14,8 @@ import { OptimizedHeroImage } from '@/components/OptimizedHeroImage';
 import { useQuestions } from '@/hooks/useQuestions';
 import { useUsers } from '@/hooks/useUsers';
 import { Question, Category, User } from '@/services/api';
+
+const ACTIVE_USERS_SLIDER_LIMIT = 12;
 
 type PaginationMeta = {
   current_page: number;
@@ -56,7 +58,7 @@ export function HomeContent({
     users: activeUsers,
     isLoading: isLoadingUsers,
     error: userError
-  } = useUsers(5, false, initialActiveUsers);
+  } = useUsers(ACTIVE_USERS_SLIDER_LIMIT, false, initialActiveUsers);
 
   const sanitizedUsers = (activeUsers || []).filter(u => u && u.id);
 
@@ -88,10 +90,6 @@ export function HomeContent({
       setSelectedCategory(category);
       handleFiltersChanged({ ...currentFilters, category_id: category.id });
     }
-  };
-
-  const handleQuestionClick = (_question: Question) => {
-    // Navigation handled by ContentArea / link
   };
 
   const handlePageChange = (page: number) => {
@@ -171,7 +169,6 @@ export function HomeContent({
                       title: question.title || "",
                       content: question.content || "",
                     }}
-                    onClick={handleQuestionClick}
                   />
                 ))}
               </div>
@@ -233,11 +230,7 @@ export function HomeContent({
           {!isLoadingUsers && userError && <BaseAlert variant="error" message={userError} />}
 
           {!isLoadingUsers && !userError && sanitizedUsers.length > 0 && (
-            <div className="grid gap-2 items-stretch" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-              {sanitizedUsers.map((user) => (
-                <UserCard key={user.id} user={user} className="h-full flex flex-col" />
-              ))}
-            </div>
+            <ActiveUsersSlider users={sanitizedUsers} />
           )}
 
           {!isLoadingUsers && !userError && sanitizedUsers.length === 0 && (

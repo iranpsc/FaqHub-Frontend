@@ -1,0 +1,22 @@
+services:
+  faq-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_VERSION: "20"
+        # NEXT_PUBLIC_* values are compiled into the Next.js client bundle.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.faqhub.ir/api}
+    image: faq-frontend:latest
+    container_name: faq-frontend
+    ports:
+      - "3005:3005"
+    environment:
+      NODE_ENV: production
+      PORT: "3005"
+      HOSTNAME: "0.0.0.0"
+      # Runtime value for server-side code; the client bundle uses the build arg above.
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.faqhub.ir/api}
+    restart: unless-stopped
+    # Do not bind to host network; publish only the app port
+    # Use `docker compose up --build -d` to build and run

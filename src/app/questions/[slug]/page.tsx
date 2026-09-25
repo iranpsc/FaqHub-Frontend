@@ -6,6 +6,7 @@ import { apiService } from "@/services/api"
 import QuestionDetailsContent from "@/components/QuestionDetailsContent"
 import { Answer, Question } from "@/services/types"
 import { htmlToPlainText } from "@/lib/sanitize"
+import { userAvatarSrc } from "@/lib/avatar"
 
 // Cache the question fetch to avoid duplicate API calls
 const getQuestion = cache(async (slug: string) => {
@@ -56,7 +57,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: [question?.user?.image_url || "https://faqhub.ir/default-thumbnail.jpg"],
+      images: [userAvatarSrc(question?.user) || "https://faqhub.ir/default-thumbnail.jpg"],
     },
     alternates: {
       canonical: url,
@@ -93,7 +94,7 @@ const qaSchema = {
     author: {
       "@type": "Person",
       name: question?.user?.name || "کاربر ناشناس",
-      ...(question?.user?.image_url ? { image: question.user.image_url } : {}),
+      ...(userAvatarSrc(question?.user) ? { image: userAvatarSrc(question?.user) } : {}),
     },
     answerCount: answers.length,
     acceptedAnswer: answers
@@ -107,7 +108,7 @@ const qaSchema = {
         author: {
           "@type": "Person",
           name: answer.user?.name || "کاربر ناشناس",
-          ...(answer.user?.image_url ? { image: answer.user.image_url } : {}),
+          ...(userAvatarSrc(answer.user) ? { image: userAvatarSrc(answer.user) } : {}),
         },
       })),
     suggestedAnswer: answers
@@ -122,7 +123,7 @@ const qaSchema = {
         author: {
           "@type": "Person",
           name: answer.user?.name || "کاربر ناشناس",
-          ...(answer.user?.image_url ? { image: answer.user.image_url } : {}),
+          ...(userAvatarSrc(answer.user) ? { image: userAvatarSrc(answer.user) } : {}),
         },
       })),
   },

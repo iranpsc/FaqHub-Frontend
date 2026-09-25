@@ -125,13 +125,6 @@ export function AuthorDetailPageContent({
       sidebarWidth="1/3"
       filters={
         <div className="mb-8">
-          <div className='lg:hidden mb-8'>
-            <AuthorCard
-              author={author}
-              activeStat={activeStat}
-              onStatClick={handleStatClick}
-            />
-          </div>
           <h1 className="sr-only">پروفایل {author.name}</h1>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
             {TYPE_HEADINGS[activeStat](author.name)}
