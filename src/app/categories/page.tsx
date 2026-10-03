@@ -2,9 +2,11 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { ContentArea } from '@/components/ContentArea';
 import { HomeSidebar } from '@/components/HomeSidebar';
+import { JsonLd } from '@/components/JsonLd';
 import { BaseAlert } from '@/components/ui/BaseAlert';
 import { PaginationHandler } from '@/components/PaginationHandler';
 import { apiService } from '@/services/api';
+import { buildCollectionPage, SITE_URL } from '@/lib/schema';
 
 export const revalidate = 180; // Revalidate every 3 minutes
 
@@ -13,11 +15,12 @@ export const metadata: Metadata = {
   title: 'دسته‌بندی‌ها - سوالات متداول',
   description: 'مشاهده تمام دسته‌بندی‌های موجود در سیستم سوالات متداول',
   keywords: ['دسته‌بندی', 'کتگوری', 'سوالات متداول', 'FAQ'],
+  alternates: { canonical: `${SITE_URL}/categories` },
   openGraph: {
     title: 'دسته‌بندی‌ها - سوالات متداول',
     description: 'مشاهده تمام دسته‌بندی‌های موجود در سیستم سوالات متداول',
     type: 'website',
-    url: 'https://faqhub.ir/categories',
+    url: `${SITE_URL}/categories`,
     images: [
         {
           url: "/main-logo.png",
@@ -55,29 +58,19 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
       total: 0,
     };
 
-    // ✅ تولید اسکیما JSON-LD برای گوگل (optimized - limit to first 20 items)
-    const schemaData = {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      "name": "لیست دسته‌بندی‌های سوالات متداول",
-      "description": "تمام دسته‌بندی‌های موجود در سیستم سوالات متداول فَقهَب (FAQHub)",
-      "numberOfItems": Math.min(categories.length, 20),
-      "itemListElement": categories.slice(0, 20).map((category, index) => ({
-        "@type": "ListItem",
-        "position": index + 1,
-        "url": `https://faqhub.ir/categories/${category.slug}`,
-        "name": category.name,
-        "description": `${category.questions_count || 0} سوال در این دسته‌بندی`,
+    const schemaData = buildCollectionPage({
+      url: `${SITE_URL}/categories`,
+      name: 'لیست دسته‌بندی‌های سوالات متداول',
+      description: 'تمام دسته‌بندی‌های موجود در سیستم سوالات متداول',
+      items: categories.slice(0, 20).map((category) => ({
+        name: category.name,
+        url: category.slug ? `${SITE_URL}/categories/${category.slug}` : undefined,
       })),
-    };
+    });
 
     return (
       <>
-        {/* ✅ اسکیما برای گوگل */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-        />
+        <JsonLd data={schemaData} />
 
         <ContentArea
           layout="with-sidebar"

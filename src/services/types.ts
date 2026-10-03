@@ -148,6 +148,7 @@ export interface Comment {
   created_at: string;
   updated_at: string;
   published: boolean;
+  published_at?: string | null;
   user: {
     id: string;
     username?: string;

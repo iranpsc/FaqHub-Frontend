@@ -2,9 +2,11 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 import { ContentArea } from '@/components/ContentArea';
 import { HomeSidebar } from '@/components/HomeSidebar';
+import { JsonLd } from '@/components/JsonLd';
 import { BaseAlert } from '@/components/ui/BaseAlert';
 import { PaginationHandler } from '@/components/PaginationHandler';
 import { apiService } from '@/services/api';
+import { buildCollectionPage, SITE_URL } from '@/lib/schema';
 import { Tag, PaginatedResponse } from '@/services/types';
 
 export const revalidate = 180; // Revalidate every 3 minutes
@@ -14,10 +16,12 @@ export const metadata: Metadata = {
   title: 'برچسب‌ها - سوالات متداول',
   description: 'مشاهده تمام برچسب‌های موجود در سیستم سوالات متداول',
   keywords: 'برچسب, تگ, سوالات متداول, FAQ',
+  alternates: { canonical: `${SITE_URL}/tags` },
   openGraph: {
     title: 'برچسب‌ها - سوالات متداول',
     description: 'مشاهده تمام برچسب‌های موجود در سیستم سوالات متداول',
     type: 'website',
+    url: `${SITE_URL}/tags`,
     images: [
         {
           url: "/main-logo.png",
@@ -36,36 +40,19 @@ interface TagsPageProps {
 }
 
 function TagsContent({ tags, pagination, error }: { tags: Tag[]; pagination: PaginatedResponse<Tag>['meta']; error?: string; }) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://faqhub.ir';
-
-  // Schema for tags list with mainEntityOfPage
-  const schema = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "name": "برچسب‌های سایت",
-    "description": "تمام برچسب‌های موجود در سیستم سوالات متداول",
-    "url": `${siteUrl}/tags`,
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": `${siteUrl}/tags`
-    },
-    "numberOfItems": tags.length,
-    "itemListElement": tags.map((tag, index) => ({
-      "@type": "ListItem",
-      "position": index + 1,
-      "url": `${siteUrl}/tags/${tag.slug}`,
-      "name": tag.name,
-      "description": `${tag.questions_count} سوال مرتبط`
-    }))
-  };
+  const schema = buildCollectionPage({
+    url: `${SITE_URL}/tags`,
+    name: 'برچسب‌های سایت',
+    description: 'تمام برچسب‌های موجود در سیستم سوالات متداول',
+    items: tags.map((tag) => ({
+      name: tag.name,
+      url: tag.slug ? `${SITE_URL}/tags/${tag.slug}` : undefined,
+    })),
+  });
 
   return (
     <>
-      {/* Schema Script */}
-      <script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-/>
+      <JsonLd data={schema} />
 
       <ContentArea
         layout="with-sidebar"

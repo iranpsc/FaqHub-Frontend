@@ -470,6 +470,7 @@ export function AnswersSection({
           sortedAnswers.map((answer) => (
             <div
               key={answer.id}
+              id={`answer-${answer.id}`}
               className={"bg-white dark:bg-gray-800 rounded-lg shadow-sm w-full min-w-0 overflow-hidden"}
             >
               <div className={`p-4 sm:p-8 ${answer.is_correct ? 'bg-green-50 dark:bg-green-900/20' : ''}`}>

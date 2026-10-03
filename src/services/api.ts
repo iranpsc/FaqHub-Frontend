@@ -17,9 +17,10 @@ import {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 const SERVER_API_BASE_URL =
-  process.env.NODE_ENV === 'production'
+  process.env.SERVER_API_URL ||
+  (process.env.NODE_ENV === 'production'
     ? 'https://api.faqhub.ir/api'
-    : 'http://localhost:8000/api';
+    : 'http://localhost:8000/api');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 const CLIENT_TIMEOUT_MS = 30_000;
@@ -31,7 +32,7 @@ const serverRequestCache = new Map<string, Promise<unknown>>();
 export const API_ERROR_MESSAGES = {
   AUTH_REQUIRED: 'احراز هویت لازم است. لطفاً دوباره وارد شوید.',
   HTTP: (status: number) => `خطای سرور (کد ${status})`,
-  CONNECTION_DEV: `امکان اتصال به سرور پشتیبان در ${API_BASE_URL} وجود ندارد. لطفاً مطمئن شوید بک‌اند لاراول روی پورت ۸۰۰۰ در حال اجرا است.`,
+  CONNECTION_DEV: `امکان اتصال به سرور پشتیبان در ${API_BASE_URL} وجود ندارد. لطفاً مطمئن شوید بک‌اند لاراول در حال اجرا است.`,
   CONNECTION_PROD: `امکان اتصال به API در ${API_BASE_URL} وجود ندارد. ممکن است سرور از دسترس خارج باشد.`,
   TIMEOUT: `مهلت درخواست به پایان رسید: سرور API در ${API_BASE_URL} ظرف ۳۰ ثانیه پاسخ نداد.`,
   TIMEOUT_SERVER: (timeout: number, endpoint: string) =>
@@ -1046,6 +1047,16 @@ class ApiService {
   async getQuestionAnswersServer(questionId: string): Promise<PaginatedResponse<Answer>> {
     return this.serverRequest<PaginatedResponse<Answer>>(
       `/questions/${questionId}/answers`
+    );
+  }
+
+  async getCommentsServer(
+    parentId: string,
+    parentType: 'question' | 'answer',
+    page: number = 1
+  ): Promise<PaginatedResponse<Comment>> {
+    return this.serverRequest<PaginatedResponse<Comment>>(
+      `/${parentType}s/${parentId}/comments?page=${page}`
     );
   }
 

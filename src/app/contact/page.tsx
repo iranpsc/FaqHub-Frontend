@@ -1,5 +1,6 @@
 import Form from "./components/form";
-import Head from "next/head";
+import { JsonLd } from "@/components/JsonLd";
+import { LOGO_URL, SITE_NAME, SITE_URL } from "@/lib/schema";
 
 export async function generateMetadata() {
   const url = `https://faqhub.ir/contact`;
@@ -45,21 +46,27 @@ export default async function ContactPage() {
   const contactSchema = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
+    "@id": `${url}#contact`,
     name: "تماس با ما | انجمن حم",
     url,
+    inLanguage: "fa-IR",
     description:
       "ما در انجمن حم و متاورس رنگ معتقدیم که توسعه این دنیای موازی و مجازی تنها با مشارکت و همفکری عمومی امکان‌پذیر است. ارتباط با انجمن متاورس ایران و دانشگاه متاورس ایران از طریق این پلتفرم به راحتی امکان‌پذیر است.",
     mainEntity: {
       "@type": "Organization",
-      name: "انجمن حم",
-      url: "https://faqhub.ir",
-      logo: "/main-logo.png",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: LOGO_URL,
+      },
       address: {
         "@type": "PostalAddress",
         streetAddress: "میرداماد، 824H+JG2",
         addressLocality: "قزوین",
         addressRegion: "استان قزوین",
-        addressCountry: "ایران",
+        addressCountry: "IR",
       },
       contactPoint: [
         {
@@ -79,17 +86,7 @@ export default async function ContactPage() {
 
   return (
     <>
-      <Head>
-        <link rel="canonical" href={url} />
-      </Head>
-
-      {/* ✅ Schema JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(contactSchema),
-        }}
-      />
+      <JsonLd data={contactSchema} />
 
       <div className="flex" dir="rtl">
         <section className="mt-[60px] lg:mt-0">

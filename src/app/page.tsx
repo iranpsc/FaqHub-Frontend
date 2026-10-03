@@ -1,5 +1,7 @@
 import HomeContent from '@/components/HomeContent';
+import { JsonLd } from '@/components/JsonLd';
 import { apiService } from '@/services/api';
+import { buildListItems, SITE_URL, websiteSchema, type JsonLdNode } from '@/lib/schema';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60; // Revalidate every 60 seconds
@@ -38,50 +40,34 @@ export default async function HomePage() {
     const initialPaginationMeta = questionsData.meta || null;
     const initialActiveUsers = Array.isArray(activeUsers) ? activeUsers : [];
 
-    // Prepare top questions for FAQ schema (optimized)
-    const topQuestions = initialQuestions
-      .filter(q => q?.title && q?.content)
-      .slice(0, 5)
-      .map(q => {
-        // Use plain_content if available from backend, otherwise do minimal processing
-        const answerText = q.plain_content || q.content.substring(0, 500);
-        
-        return {
-          "@type": "Question",
-          name: q.title,
-          url: `https://faqhub.ir/questions/${q.slug}`,
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: answerText,
-          },
-        };
-      });
+    const questionList = buildListItems(
+      initialQuestions.slice(0, 10).map((question) => ({
+        name: question.title,
+        url: question.slug ? `${SITE_URL}/questions/${question.slug}` : undefined,
+      }))
+    );
+    const siteNode = websiteSchema('پرسش و پاسخ درباره موضوعات مختلف در بزرگترین انجمن ایران. سوالات خود را بپرسید و پاسخ‌ها را مشاهده کنید.');
+    delete siteNode['@context'];
 
-    const siteSchema = {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      url: "https://faqhub.ir",
-      name: "انجمن حم",
-      description: "بزرگترین انجمن پرسش و پاسخ ایران",
-      publisher: { "@type": "Organization", name: "انجمن حم", url: "https://faqhub.ir" },
-      potentialAction: {
-        "@type": "SearchAction",
-        target: "https://faqhub.ir/search?q={search_term_string}",
-        "query-input": "required name=search_term_string",
-      },
-    };
-
-    const faqSchema = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: topQuestions,
+    const homeSchema: JsonLdNode = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        siteNode,
+        ...(questionList.length
+          ? [{
+              '@type': 'ItemList',
+              '@id': `${SITE_URL}/#questions`,
+              name: 'آخرین پرسش‌ها',
+              numberOfItems: questionList.length,
+              itemListElement: questionList,
+            }]
+          : []),
+      ],
     };
 
     return (
       <>
-        {/* JSON-LD Schemas */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }} />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+        <JsonLd data={homeSchema} />
 
         <HomeContent
           initialQuestions={initialQuestions}
@@ -92,11 +78,14 @@ export default async function HomePage() {
     );
   } catch {
     return (
-      <HomeContent
-        initialQuestions={[]}
-        initialPaginationMeta={null}
-        initialActiveUsers={[]}
-      />
+      <>
+        <JsonLd data={websiteSchema()} />
+        <HomeContent
+          initialQuestions={[]}
+          initialPaginationMeta={null}
+          initialActiveUsers={[]}
+        />
+      </>
     );
   }
 }

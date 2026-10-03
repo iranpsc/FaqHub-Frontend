@@ -197,6 +197,7 @@ export function CommentsSection({
           comments.map((comment: Comment) => (
             <div
               key={comment.id}
+              id={`comment-${comment.id}`}
               className={`${
                 parentType === 'question'
                   ? 'bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4'

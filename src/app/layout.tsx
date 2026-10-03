@@ -7,6 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import { getServerAuth } from "@/lib/serverAuth";
 import { azarMehr, rokh } from '../fonts/localFonts';
+import { JsonLd } from '@/components/JsonLd';
+import { organizationSchema } from '@/lib/schema';
 
 export const metadata: Metadata = {
   title: "انجمن حم - بزرگترین انجمن پرسش و پاسخ ایران",
@@ -24,6 +26,7 @@ export default async function RootLayout({
   return (
     <html lang="fa" dir="rtl">
       <body className={`${azarMehr.variable} ${rokh.variable} antialiased`}>
+        <JsonLd data={organizationSchema()} />
         <AuthProvider initialUser={initialUser} initialToken={initialToken}>
           <NavigationProgress />
           <AppLayout>{children}</AppLayout>
