@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { BaseButton } from '@/components/ui/BaseButton';
 import { BaseAvatar } from '@/components/ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import { BaseBadge } from '@/components/ui/BaseBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import clsx from 'clsx';
@@ -49,7 +50,7 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
   const [isSwiping, setIsSwiping] = useState(false);
   
   // Get authentication state from context
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { user, isAuthenticated, login, logout, isLoginLoading, isLogoutLoading } = useAuth();
 
   const logoUrl = '/assets/icons/main-logo.PNG';
 
@@ -86,7 +87,7 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
 
   const handleMenuItemClick = () => {
     // Close sidebar when menu item is clicked (only on mobile screens)
-    if (window.innerWidth < 1024) {
+    if (window.innerWidth < 1280) {
       onToggle();
     }
     // Also close user dropdown if it's open
@@ -135,7 +136,7 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
   useEffect(() => {
     const handleGlobalTouchStart = (e: TouchEvent) => {
       // Only handle swipes on mobile screens (width < 1024px)
-      if (window.innerWidth >= 1024) return;
+      if (window.innerWidth >= 1280) return;
       
       touchStartX.current = e.touches[0].clientX;
       touchStartY.current = e.touches[0].clientY;
@@ -143,7 +144,7 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
 
     const handleGlobalTouchEnd = (e: TouchEvent) => {
       // Only handle swipes on mobile screens (width < 1024px)
-      if (window.innerWidth >= 1024) return;
+      if (window.innerWidth >= 1280) return;
       
       touchEndX.current = e.changedTouches[0].clientX;
       touchEndY.current = e.changedTouches[0].clientY;
@@ -202,16 +203,16 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
     <aside
       ref={sidebarRef}
       className={clsx(
-        'sidebar-container fixed right-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg z-50 transform transition-all duration-300 ease-in-out flex flex-col lg:translate-x-0',
+        'sidebar-container fixed right-0 top-0 h-full bg-white dark:bg-gray-800 shadow-lg z-50 transform transition-all duration-300 ease-in-out flex flex-col xl:translate-x-0',
         {
           // Mobile widths and slide-in behavior
           'w-80': isOpen,
           'w-16': !isOpen,
           'translate-x-0': isOpen,
-          'translate-x-full lg:translate-x-0': !isOpen,
+          'translate-x-full xl:translate-x-0': !isOpen,
           // Desktop widths: default open to avoid CLS before mount; collapse after mount when closed
-          'lg:w-80': !mounted || isOpen,
-          'lg:w-16': mounted && !isOpen,
+          'xl:w-80': !mounted || isOpen,
+          'xl:w-16': mounted && !isOpen,
           'opacity-90': isSwiping,
           'opacity-100': !isSwiping
         }
@@ -300,7 +301,7 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
                   className="flex items-center gap-3 w-full p-2 rounded-lg transition-colors outline-none focus:outline-none focus:ring-0 focus:border-0"
                 >
                   <BaseAvatar 
-                    src={user?.image_url} 
+                    src={userAvatarSrc(user)} 
                     name={user?.name || 'User'} 
                     size="md"
                     status="online"
@@ -369,7 +370,7 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
               /* Collapsed view - just avatar */
               <div className="flex items-center justify-center">
                 <BaseAvatar 
-                  src={user?.image_url} 
+                  src={userAvatarSrc(user)} 
                   name={user?.name || 'User'} 
                   size="md"
                   status="online"
@@ -449,11 +450,19 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
             variant="primary" 
             size="lg" 
             block
+            disabled={isLoginLoading}
             className="mb-4 flex justify-between"
             aria-label='login '
           >
-            <LogIn className="w-4 h-4 md:w-7 md:h-7" />
-            <span>ورود</span>
+            {isLoginLoading ? (
+              <svg className="w-4 h-4 md:w-7 md:h-7 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <LogIn className="w-4 h-4 md:w-7 md:h-7" />
+            )}
+            <span>{isLoginLoading ? 'در حال ورود...' : 'ورود'}</span>
           </BaseButton>
         )}
 
@@ -464,11 +473,19 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
             variant="danger" 
             size="lg" 
             block
+            disabled={isLogoutLoading}
             className="mb-4 flex justify-between"
             aria-label='log out '
           >
-            <LogOut className="w-4 h-4 md:w-7 md:h-7" />
-            <span>خروج</span>
+            {isLogoutLoading ? (
+              <svg className="w-4 h-4 md:w-7 md:h-7 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            ) : (
+              <LogOut className="w-4 h-4 md:w-7 md:h-7" />
+            )}
+            <span>{isLogoutLoading ? 'در حال خروج...' : 'خروج'}</span>
           </BaseButton>
         )}
 
@@ -503,18 +520,34 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
               {!isAuthenticated ? (
                 <button 
                   onClick={handleLogin}
-                  className="p-2 rounded-full bg-blue-700 dark:bg-yellow-700 text-white" 
+                  disabled={isLoginLoading}
+                  className="p-2 rounded-full bg-blue-700 dark:bg-yellow-700 text-white disabled:opacity-50" 
                   title="ورود"
                 >
-                  <LogIn className="w-5 h-5 text-white" />
+                  {isLoginLoading ? (
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <LogIn className="w-5 h-5 text-white" />
+                  )}
                 </button>
               ) : (
                 <button 
                   onClick={handleLogout}
-                  className="p-2 rounded-full bg-blue-100 dark:bg-yellow-700 text-white" 
+                  disabled={isLogoutLoading}
+                  className="p-2 rounded-full bg-blue-100 dark:bg-yellow-700 text-white disabled:opacity-50" 
                   title="خروج"
                 >
-                  <LogOut className="w-5 h-5 text-white" />
+                  {isLogoutLoading ? (
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <LogOut className="w-5 h-5 text-white" />
+                  )}
                 </button>
               )}
             </div>

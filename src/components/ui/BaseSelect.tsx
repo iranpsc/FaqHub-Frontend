@@ -52,11 +52,20 @@ export function BaseSelect<T extends SelectOption = SelectOption>({
   
   const selectRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const onFetchMoreRef = useRef(onFetchMore);
+  const lastSearchFetchRef = useRef<string | null>(null);
 
-  // Filter options based on search term
-  const filteredOptions = Array.isArray(options) ? options.filter(option =>
-    option.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  onFetchMoreRef.current = onFetchMore;
+
+  const usesBackendSearch = paginated && onFetchMore && searchable;
+
+  const filteredOptions = usesBackendSearch
+    ? (Array.isArray(options) ? options : [])
+    : (Array.isArray(options)
+      ? options.filter(option =>
+          option.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : []);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -78,6 +87,34 @@ export function BaseSelect<T extends SelectOption = SelectOption>({
       searchRef.current.focus();
     }
   }, [isOpen, searchable]);
+
+  // Reset pagination and search fetch cache when dropdown closes
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentPage(1);
+      lastSearchFetchRef.current = null;
+    }
+  }, [isOpen]);
+
+  // Debounced backend search — only when searchTerm changes, not on every parent re-render
+  useEffect(() => {
+    if (!isOpen || !usesBackendSearch) return;
+
+    const timeout = setTimeout(() => {
+      const key = searchTerm;
+
+      if (lastSearchFetchRef.current === key) return;
+
+      lastSearchFetchRef.current = key;
+      setCurrentPage(1);
+      setIsLoadingMore(true);
+      onFetchMoreRef.current!(1, searchTerm).finally(() => {
+        setIsLoadingMore(false);
+      });
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchTerm, isOpen, usesBackendSearch]);
 
   const handleSelect = (option: T) => {
     if (multiple) {
@@ -117,12 +154,12 @@ export function BaseSelect<T extends SelectOption = SelectOption>({
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (!paginated || !onFetchMore || isLoadingMore) return;
+    if (!paginated || !onFetchMoreRef.current || isLoadingMore) return;
 
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
     if (scrollTop + clientHeight >= scrollHeight - 5) {
       setIsLoadingMore(true);
-      onFetchMore(currentPage + 1, searchTerm).finally(() => {
+      onFetchMoreRef.current(currentPage + 1, searchTerm).finally(() => {
         setIsLoadingMore(false);
         setCurrentPage(prev => prev + 1);
       });

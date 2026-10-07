@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { BaseModal } from './ui/BaseModal';
 import { BaseInput } from './ui/BaseInput';
 import { BaseSelect } from './ui/BaseSelect';
@@ -9,7 +9,7 @@ import { BaseButton } from './ui/BaseButton';
 import { useQuestions } from '@/hooks/useQuestions';
 import { useCategories } from '@/hooks/useCategories';
 import { useTags } from '@/hooks/useTags';
-import { Question, Category, Tag } from '@/services/types';
+import { Question, Category, Tag, ApiParams } from '@/services/types';
 import Swal from 'sweetalert2';
 import { apiService } from '@/services/api';
 import { htmlToPlainText } from '@/lib/sanitize';
@@ -70,6 +70,10 @@ export function QuestionModal({
   const [categoryOptions, setCategoryOptions] = useState<Category[]>([]);
   const [tagOptions, setTagOptions] = useState<Tag[]>([]);
   const requestedTagsRef = useRef(false);
+  const formTagsRef = useRef(form.tags);
+  const tagsRef = useRef(tags);
+  formTagsRef.current = form.tags;
+  tagsRef.current = tags;
 
   // Fetch categories when modal becomes visible
   useEffect(() => {
@@ -241,9 +245,28 @@ export function QuestionModal({
     }
   };
 
-  const handleFetchTags = async (page: number, search?: string) => {
+  const handleFetchTags = useCallback(async (page: number, search?: string) => {
     try {
-      const result = await apiService.getTagsPaginated({ page, per_page: 10, search });
+      const trimmedSearch = search?.trim() ?? '';
+
+      // Empty search: restore full tag list (from cache or API)
+      if (page === 1 && !trimmedSearch) {
+        const allTags = tagsRef.current.length > 0
+          ? tagsRef.current
+          : await apiService.getTags({});
+
+        setTagOptions(() => {
+          const map = new Map<string, Tag>();
+          formTagsRef.current.forEach(t => map.set(t.id, t));
+          allTags.forEach(t => map.set(t.id, t));
+          return Array.from(map.values());
+        });
+        return;
+      }
+
+      const params: ApiParams = { page, per_page: 10, query: trimmedSearch };
+
+      const result = await apiService.getTagsPaginated(params);
       if (!result.success) {
         await Swal.fire({
           title: 'خطا!',
@@ -258,10 +281,17 @@ export function QuestionModal({
       }
       const pageItems = result.data.data || [];
       setTagOptions(prev => {
-        const map = new Map(prev.map(t => [t.id, t]));
-        pageItems.forEach(t => {
-          if (!map.has(t.id)) map.set(t.id, t);
-        });
+        const map = new Map<string, Tag>();
+
+        formTagsRef.current.forEach(t => map.set(t.id, t));
+
+        if (page === 1) {
+          pageItems.forEach(t => map.set(t.id, t));
+        } else {
+          prev.forEach(t => map.set(t.id, t));
+          pageItems.forEach(t => map.set(t.id, t));
+        }
+
         return Array.from(map.values());
       });
     } catch (err: unknown) {
@@ -275,7 +305,7 @@ export function QuestionModal({
         timer: 3000,
       });
     }
-  };
+  }, []);
 
   const handleAddTag = (tagName: string) => {
     // Avoid duplicates in selected tags (case-insensitive)

@@ -26,7 +26,8 @@ export interface Question {
     id: string;
     username?: string;
     name: string;
-    image_url?: string;
+    image?: string | null;
+    image_url?: string | null;
     score?: number;
   };
   category?: {
@@ -56,7 +57,8 @@ export interface User {
   name: string;
   email?: string;
   mobile?: string;
-  image_url?: string;
+  image?: string | null;
+  image_url?: string | null;
   online: boolean;
   score?: number;
   level_name?: string;
@@ -122,7 +124,8 @@ export interface Answer {
     id: string;
     username?: string;
     name: string;
-    image_url?: string;
+    image?: string | null;
+    image_url?: string | null;
     score: number;
   };
   votes: {
@@ -145,11 +148,13 @@ export interface Comment {
   created_at: string;
   updated_at: string;
   published: boolean;
+  published_at?: string | null;
   user: {
     id: string;
     username?: string;
     name: string;
-    image_url?: string;
+    image?: string | null;
+    image_url?: string | null;
     score: number;
   };
   votes: {
@@ -248,7 +253,8 @@ export interface CommentData {
   user?: {
     id: string;
     name: string;
-    image_url?: string;
+    image?: string | null;
+    image_url?: string | null;
   };
 }
 

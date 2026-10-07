@@ -1,5 +1,6 @@
 import Form from "./components/form";
-import Head from "next/head";
+import { JsonLd } from "@/components/JsonLd";
+import { LOGO_URL, SITE_NAME, SITE_URL } from "@/lib/schema";
 
 export async function generateMetadata() {
   const url = `https://faqhub.ir/contact`;
@@ -45,21 +46,27 @@ export default async function ContactPage() {
   const contactSchema = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
+    "@id": `${url}#contact`,
     name: "تماس با ما | انجمن حم",
     url,
+    inLanguage: "fa-IR",
     description:
       "ما در انجمن حم و متاورس رنگ معتقدیم که توسعه این دنیای موازی و مجازی تنها با مشارکت و همفکری عمومی امکان‌پذیر است. ارتباط با انجمن متاورس ایران و دانشگاه متاورس ایران از طریق این پلتفرم به راحتی امکان‌پذیر است.",
     mainEntity: {
       "@type": "Organization",
-      name: "انجمن حم",
-      url: "https://faqhub.ir",
-      logo: "/main-logo.png",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: LOGO_URL,
+      },
       address: {
         "@type": "PostalAddress",
         streetAddress: "میرداماد، 824H+JG2",
         addressLocality: "قزوین",
         addressRegion: "استان قزوین",
-        addressCountry: "ایران",
+        addressCountry: "IR",
       },
       contactPoint: [
         {
@@ -79,17 +86,7 @@ export default async function ContactPage() {
 
   return (
     <>
-      <Head>
-        <link rel="canonical" href={url} />
-      </Head>
-
-      {/* ✅ Schema JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(contactSchema),
-        }}
-      />
+      <JsonLd data={contactSchema} />
 
       <div className="flex" dir="rtl">
         <section className="mt-[60px] lg:mt-0">
@@ -143,9 +140,9 @@ export default async function ContactPage() {
                       <div className="flex gap-3 text-center lg:text-right">
                         <a
                           className="text-light-newColors-shades-50 dark:text-white font-medium text-[16px] md:text-[25px] leading-[32px] font-rokh"
-                          href="mailto:info@rgb.irpsc.com"
+                          href="mailto:info@faqhub.ir"
                         >
-                          info@rgb.irpsc.com
+                          info@faqhub.ir
                         </a>
                         <svg className="mt-[2px]" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 22 22" fill="none">
                           <path className="dark:fill-white" d="M15.582 18.7917H6.41536C3.66536 18.7917 1.83203 17.4167 1.83203 14.2084V7.79171C1.83203 4.58337 3.66536 3.20837 6.41536 3.20837H15.582C18.332 3.20837 20.1654 4.58337 20.1654 7.79171V14.2084C20.1654 17.4167 18.332 18.7917 15.582 18.7917Z" stroke="#292D32" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />

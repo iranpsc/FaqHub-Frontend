@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { User } from '@/services/types';
+import { userAvatarSrc } from '@/lib/avatar';
 
 export type AuthorStatType = 'questions' | 'answers' | 'comments';
 
@@ -21,9 +22,10 @@ export function AuthorCard({
 }: AuthorCardProps) {
   const [imageError, setImageError] = useState(false);
 
-  const authorImage = imageError || !author.image_url 
+  const resolvedAuthorImage = userAvatarSrc(author);
+  const authorImage = imageError || !resolvedAuthorImage
     ? `https://ui-avatars.com/api/?name=${encodeURIComponent(author.name)}&size=64&background=3b82f6&color=fff&bold=true`
-    : author.image_url;
+    : resolvedAuthorImage;
 
   const formatNumber = (num: number = 0) => {
     if (num >= 1000000) {

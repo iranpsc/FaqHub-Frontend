@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { JsonLd } from "@/components/JsonLd";
+import { LOGO_URL, SITE_NAME, SITE_URL } from "@/lib/schema";
 
 
 
@@ -43,34 +45,34 @@ export default function AboutPage() {
   const aboutSchema = {
     "@context": "https://schema.org",
     "@type": "AboutPage",
+    "@id": `${url}#about`,
     name: "درباره ما | انجمن حم",
     url,
     description:
       "انجمن حم با تأکید بر نوآوری، پرسشگری و گفت‌وگو بستری برای تبادل دانش و تجربه فراهم کرده است.",
+    inLanguage: "fa-IR",
+    image: LOGO_URL,
     mainEntity: {
       "@type": "Organization",
-      name: "انجمن حم",
-      url: "https://faqhub.ir",
-      logo: "/main-logo.png",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: LOGO_URL,
+      },
       sameAs: [
         "https://www.instagram.com/rgb.irpsc",
         "https://uni.irpsc.com/teacher/paradise-supply-chain/",
       ],
     },
-    image: "/main-logo.png",
   };
 
   const Tamin = "/assets/images/tamin.jpg";
 
   return (
     <>
-      {/* ✅ اسکیما JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(aboutSchema),
-        }}
-      />
+      <JsonLd data={aboutSchema} />
 
       <section className="mt-[60px] lg:mt-0 mx-auto px-4 lg:px-9 !font-azarMehr">
         <h1 className="font-rokh font-bold text-[24px] sm:text-[26px] md:text-[28px] lg:text-[30px] xl:text-[32px] text-center dark:text-white mt-[64px] mb-[16px]">

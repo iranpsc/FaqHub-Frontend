@@ -1,10 +1,49 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
+
+function resolveApiConfig() {
+  const clientApiUrl =
+    process.env.NEXT_PUBLIC_API_URL ||
+    (process.env.NODE_ENV === "production"
+      ? "https://api.faqhub.ir/api"
+      : "http://localhost:8000/api");
+
+  const isRelativeApiUrl = clientApiUrl.startsWith("/");
+
+  const backendApiUrl =
+    process.env.SERVER_API_URL ||
+    (isRelativeApiUrl
+      ? process.env.NODE_ENV === "production"
+        ? "https://api.faqhub.ir/api"
+        : "http://localhost:8000/api"
+      : clientApiUrl);
+
+  const backendOrigin = new URL(backendApiUrl).origin;
+  const backendRemotePattern = {
+    protocol: new URL(backendApiUrl).protocol.replace(":", "") as "http" | "https",
+    hostname: new URL(backendApiUrl).hostname,
+  };
+
+  return {
+    clientApiUrl,
+    isRelativeApiUrl,
+    backendApiUrl,
+    backendOrigin,
+    backendRemotePattern,
+  };
+}
+
+const {
+  clientApiUrl,
+  isRelativeApiUrl,
+  backendApiUrl,
+  backendOrigin,
+  backendRemotePattern,
+} = resolveApiConfig();
 
 const nextConfig: NextConfig = {
-  // Standalone output for production: minimal node_modules, better for PM2/Docker
-  output: 'standalone',
-
-  // Production optimizations
+  // Standalone output for minimal Docker images (copies only traced deps)
+  output: "standalone",
   compress: true,
   poweredByHeader: false,
 
@@ -20,10 +59,7 @@ const nextConfig: NextConfig = {
   // Image optimization
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'api.faqhub.ir',
-      },
+      backendRemotePattern,
       {
         protocol: 'http',
         hostname: 'localhost',
@@ -46,13 +82,10 @@ const nextConfig: NextConfig = {
   
   // API proxy to avoid CORS issues
   async rewrites() {
-    const isProd = process.env.NODE_ENV === 'production';
     return [
       {
         source: '/api/:path*',
-        destination: isProd
-          ? 'https://api.faqhub.ir/api/:path*'
-          : 'http://localhost:8000/api/:path*',
+        destination: `${backendApiUrl}/:path*`,
       },
     ];
   },
@@ -60,7 +93,7 @@ const nextConfig: NextConfig = {
   // Security headers
   async headers() {
     const isProd = process.env.NODE_ENV === 'production';
-    
+
     // Content Security Policy
     // Note: 'unsafe-inline' is needed for Next.js and CKEditor styles
     // 'unsafe-eval' is needed for CKEditor in development
@@ -69,8 +102,9 @@ const nextConfig: NextConfig = {
       `script-src 'self' 'unsafe-inline'${isProd ? '' : " 'unsafe-eval'"}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
-      "img-src 'self' data: blob: https://api.faqhub.ir https://ui-avatars.com https://irpsc.com https://*.irpsc.com",
-      `connect-src 'self' ${isProd ? 'https://api.faqhub.ir' : 'http://localhost:8000'} https://fonts.googleapis.com https://fonts.gstatic.com`,
+      `img-src 'self' data: blob: ${backendOrigin} https://ui-avatars.com https://irpsc.com https://*.irpsc.com`,
+      `connect-src 'self'${isRelativeApiUrl ? "" : ` ${backendOrigin}`} https://fonts.googleapis.com https://fonts.gstatic.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://sentry.irpsc.com`,
+      "worker-src 'self' blob:",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -127,12 +161,15 @@ const nextConfig: NextConfig = {
   
   // Environment variables with sensible defaults per environment
   env: {
-    NEXT_PUBLIC_API_URL:
-      process.env.NEXT_PUBLIC_API_URL ||
-      (process.env.NODE_ENV === 'production'
-        ? 'https://api.faqhub.ir/api'
-        : 'http://localhost:8000/api'),
+    NEXT_PUBLIC_API_URL: clientApiUrl,
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  tunnelRoute: "/sentry-tunnel",
+});

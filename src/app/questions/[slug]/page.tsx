@@ -1,11 +1,14 @@
 
 // app/questions/[slug]/page.tsx
 import { Metadata } from "next"
+import { notFound } from "next/navigation"
 import { cache } from "react"
 import { apiService } from "@/services/api"
 import QuestionDetailsContent from "@/components/QuestionDetailsContent"
+import { JsonLd } from "@/components/JsonLd"
 import { Answer, Question } from "@/services/types"
 import { htmlToPlainText } from "@/lib/sanitize"
+import { buildQaPageSchema, type QaPageComments } from "@/lib/schema"
 
 // Cache the question fetch to avoid duplicate API calls
 const getQuestion = cache(async (slug: string) => {
@@ -16,6 +19,31 @@ const getQuestion = cache(async (slug: string) => {
 const getAnswers = cache(async (questionId: string) => {
   return await apiService.getQuestionAnswersServer(questionId);
 });
+
+async function loadVisibleComments(questionId: string, answers: Answer[]): Promise<QaPageComments> {
+  const [questionResult, ...answerResults] = await Promise.all([
+    apiService.getCommentsServer(questionId, 'question').catch(() => null),
+    ...answers.map((answer) =>
+      apiService.getCommentsServer(answer.id, 'answer').catch(() => null)
+    ),
+  ]);
+
+  const answerComments: NonNullable<QaPageComments['answerComments']> = {};
+  answers.forEach((answer, index) => {
+    const result = answerResults[index];
+    if (!result) return;
+    answerComments[answer.id] = {
+      comments: result.data || [],
+      total: result.meta?.total,
+    };
+  });
+
+  return {
+    questionComments: questionResult?.data || [],
+    questionCommentTotal: questionResult?.meta?.total,
+    answerComments,
+  };
+}
 
 export const revalidate = 300; // Revalidate every 5 minutes
 
@@ -56,7 +84,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: [question?.user?.image_url || "https://faqhub.ir/default-thumbnail.jpg"],
+      images: ["https://faqhub.ir/assets/icons/main-logo.PNG"],
     },
     alternates: {
       canonical: url,
@@ -70,74 +98,26 @@ export default async function QuestionDetailsPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  
-  // Use cached question fetch (deduplicates with generateMetadata)
+
   const question: Question = await getQuestion(slug)
-  
-  // Fetch answers using cached function
-  const answersResponse = await getAnswers(question.id)
-  const answers: Answer[] = answersResponse?.data || []
+  if (!question?.id) {
+    notFound()
+  }
 
-  const clean = (text: string) => htmlToPlainText(text);
+  let answers: Answer[] = []
+  try {
+    const answersResponse = await getAnswers(question.id)
+    answers = answersResponse?.data || []
+  } catch {
+    answers = []
+  }
 
-const qaSchema = {
-  "@context": "https://schema.org",
-  "@type": "QAPage",
-  mainEntity: {
-    "@type": "Question",
-    name: question?.title || "",
-    text: clean(question?.content || ""),
-    dateCreated: question?.created_at || "",
-    url: `https://faqhub.ir/questions/${slug}`,
-    upvoteCount: question?.votes_count || 0, // 👈 اضافه شد
-    author: {
-      "@type": "Person",
-      name: question?.user?.name || "کاربر ناشناس",
-      ...(question?.user?.image_url ? { image: question.user.image_url } : {}),
-    },
-    answerCount: answers.length,
-    acceptedAnswer: answers
-      .filter((answer) => answer.is_correct)
-      .map((answer) => ({
-        "@type": "Answer",
-        text: clean(answer.content),
-        dateCreated: answer.created_at,
-        url: `https://faqhub.ir/questions/${slug}#answer-${answer.id}`,
-        upvoteCount: answer.votes_count || 0, // 👈 اضافه شد
-        author: {
-          "@type": "Person",
-          name: answer.user?.name || "کاربر ناشناس",
-          ...(answer.user?.image_url ? { image: answer.user.image_url } : {}),
-        },
-      })),
-    suggestedAnswer: answers
-      .filter((answer) => !answer.is_correct)
-      .slice(0, 3)
-      .map((answer) => ({
-        "@type": "Answer",
-        text: clean(answer.content),
-        dateCreated: answer.created_at,
-        url: `https://faqhub.ir/questions/${slug}#answer-${answer.id}`,
-        upvoteCount: answer.votes_count || 0, // 👈 اضافه شد
-        author: {
-          "@type": "Person",
-          name: answer.user?.name || "کاربر ناشناس",
-          ...(answer.user?.image_url ? { image: answer.user.image_url } : {}),
-        },
-      })),
-  },
-}
-
+  const commentExtras = await loadVisibleComments(question.id, answers)
 
   return (
     <>
-      {/* متا و اسکیما */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(qaSchema) }}
-      />
+      <JsonLd data={buildQaPageSchema(question, answers, slug, commentExtras)} />
 
-      {/* محتوای اصلی */}
       <QuestionDetailsContent
         slug={slug}
         initialQuestion={question}

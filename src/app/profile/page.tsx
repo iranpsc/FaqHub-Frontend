@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { BaseCard } from '@/components/ui/BaseCard';
 import { BaseAvatar } from '@/components/ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import { BaseButton } from '@/components/ui/BaseButton';
 import { BaseInput } from '@/components/ui/BaseInput';
 import { BaseBadge } from '@/components/ui/BaseBadge';
@@ -87,7 +88,7 @@ export default function ProfilePage() {
         name: user.name || '',
         email: user.email || '',
         mobile: user.mobile || '',
-        image_url: user.image_url || '',
+        image_url: userAvatarSrc(user) || '',
         score: user.score || 0,
         online: user.online || false,
         // Only update login_notification_enabled if settings haven't been manually updated

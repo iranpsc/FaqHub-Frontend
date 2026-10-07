@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { BaseAvatar } from '@/components/ui/BaseAvatar';
+import { userAvatarSrc } from '@/lib/avatar';
 import { VoteButtons } from '../ui/VoteButtons';
 import { SanitizedContent } from '../ui/SanitizedContent';
 import { useAuth } from '@/contexts/AuthContext';
@@ -281,7 +282,7 @@ export function QuestionContent({
             >
               <div className="flex gap-2">
                 <BaseAvatar 
-                  src={question.user.image_url} 
+                  src={userAvatarSrc(question.user)} 
                   name={question.user.name} 
                   size="lg" 
                   className="transition-transform group-hover:scale-105" 
@@ -355,9 +356,9 @@ export function QuestionContent({
       )}
 
       {/* Bottom Row: Voting and Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-gray-600 dark:text-gray-400">
-        {/* Right: Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-start sm:justify-end">
+      <div className="flex flex-row flex-wrap items-center justify-between gap-3 text-sm text-gray-600 dark:text-gray-400">
+        {/* Action Buttons & Stats */}
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap justify-start min-w-0">
           {/* Views */}
           {(question.views !== undefined || question.views_count !== undefined) && (
             <div className="flex items-center gap-1 whitespace-nowrap">
@@ -525,8 +526,8 @@ export function QuestionContent({
           )}
         </div>
 
-        {/* Left: Voting Buttons */}
-        <div className="flex items-center gap-4 min-w-0">
+        {/* Voting Buttons */}
+        <div className="flex items-center gap-4 min-w-0 flex-shrink-0">
           <VoteButtons
             resourceType="question"
             resourceId={question.id}

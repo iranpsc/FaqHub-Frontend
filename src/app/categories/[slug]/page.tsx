@@ -1,5 +1,8 @@
+import { Metadata } from 'next';
 import CategoryContent from '@/components/CategoryContent';
+import { JsonLd } from '@/components/JsonLd';
 import { apiService } from '@/services/api';
+import { buildCollectionPage, SITE_URL } from '@/lib/schema';
 import { Question, PaginatedResponse } from '@/services/types';
 
 interface CategoryPageProps {
@@ -9,6 +12,36 @@ interface CategoryPageProps {
 }
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const url = `${SITE_URL}/categories/${slug}`;
+
+  try {
+    const category = await apiService.getCategoryServer(slug);
+    const title = `${category.name} - سوالات متداول`;
+    const description = category.description?.trim()
+      || `مشاهده سوالات متداول در دسته‌بندی ${category.name}`;
+
+    return {
+      title,
+      description,
+      alternates: { canonical: url },
+      openGraph: {
+        title,
+        description,
+        type: 'website',
+        url,
+      },
+    };
+  } catch {
+    return {
+      title: 'دسته‌بندی',
+      description: 'مشاهده سوالات دسته‌بندی در سیستم سوالات متداول',
+      alternates: { canonical: url },
+    };
+  }
+}
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
@@ -29,49 +62,21 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       // Use empty questions; meta may still be set from getCategoryServer
     }
 
-    // Metadata برای SEO
-    // const metadata: Metadata = {
-    //   title: `${category.name} - سوالات متداول`,
-    //   description: `مشاهده سوالات متداول در دسته‌بندی ${category.name}`,
-    //   keywords: `${category.name}, سوالات متداول, FAQ`,
-    //   openGraph: {
-    //     title: `${category.name} - سوالات متداول`,
-    //     description: `مشاهده سوالات متداول در دسته‌بندی ${category.name}`,
-    //     type: 'website',
-    //     url: `${process.env.NEXT_PUBLIC_SITE_URL}/categories/${slug}`,
-    //     images: [
-    //     {
-    //       url: "/main-logo.png",
-    //       width: 100,
-    //       height: 100,
-    //       alt: "تیم متاورس رنگ",
-    //     },
-    //   ],
-    //   },
-    // };
-
-    // Schema برای FAQPage
-    const schema = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": questions.map(q => ({
-        "@type": "Question",
-        "name": q.title,
-        "url": `${process.env.NEXT_PUBLIC_SITE_URL}/questions/${q.slug}`,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": q.content || "پاسخی برای این سوال هنوز ثبت نشده است."
-        }
-      }))
-    };
+    const schema = buildCollectionPage({
+      url: `${SITE_URL}/categories/${slug}`,
+      name: category?.name ? `سوالات ${category.name}` : 'سوالات دسته‌بندی',
+      description: category?.description || (category?.name
+        ? `مشاهده سوالات متداول در دسته‌بندی ${category.name}`
+        : undefined),
+      items: questions.map((question) => ({
+        name: question.title,
+        url: question.slug ? `${SITE_URL}/questions/${question.slug}` : undefined,
+      })),
+    });
 
     return (
       <>
-        {/* Inject JSON-LD for FAQ */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
+        <JsonLd data={schema} />
 
         <CategoryContent
           slug={slug}

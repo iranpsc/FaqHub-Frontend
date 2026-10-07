@@ -2,6 +2,8 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { apiService } from '@/services/api';
 import { AuthorDetailPageContent } from './AuthorDetailPageContent';
+import { JsonLd } from '@/components/JsonLd';
+import { buildListItems, buildProfilePageSchema, SITE_URL, type JsonLdNode } from '@/lib/schema';
 import { Question, User } from '@/services/types';
 
 interface AuthorDetailPageProps {
@@ -62,48 +64,32 @@ export async function generateMetadata({ params }: AuthorDetailPageProps): Promi
   }
 }
 
-type AuthorSchemaQuestion = Question & { answer?: string };
+function authorStructuredData(author: User, questions: Question[], type: string): JsonLdNode[] {
+  const profile = buildProfilePageSchema(author);
+  const nodes: JsonLdNode[] = profile ? [profile] : [];
 
-function AuthorSchema({ author, questions }: { author: User; questions: AuthorSchemaQuestion[] }) {
-  const authorDescription = typeof author.bio === 'string' ? author.bio : '';
-  const authorAvatar = typeof author.avatar === 'string' ? author.avatar : '';
-  const authorUrl = `https://faqhub.ir/authors/${author.username ?? author.id}`;
+  if (type !== 'questions') return nodes;
 
-  const authorSchema = {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    "name": author.name,
-    "description": authorDescription,
-    "image": authorAvatar,
-    "url": authorUrl,
-    "mainEntityOfPage": authorUrl,
-  };
-
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": questions.map((q) => ({
-      "@type": "Question",
-      "name": q.title,
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": q.answer || q.content || "پاسخ این سؤال در صفحه موجود است.",
-      },
-    })),
-  };
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(authorSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
-    </>
+  const list = buildListItems(
+    questions.map((question) => ({
+      name: question.title,
+      url: question.slug ? `${SITE_URL}/questions/${question.slug}` : undefined,
+    }))
   );
+
+  if (list.length === 0) return nodes;
+
+  const authorUrl = `${SITE_URL}/authors/${author.username ?? author.id}`;
+  nodes.push({
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    '@id': `${authorUrl}#questions`,
+    name: `پرسش‌های ${author.name}`,
+    numberOfItems: list.length,
+    itemListElement: list,
+  });
+
+  return nodes;
 }
 
 export default async function AuthorDetailPage({ params, searchParams }: AuthorDetailPageProps) {
@@ -121,21 +107,22 @@ export default async function AuthorDetailPage({ params, searchParams }: AuthorD
       apiService.getAuthorQuestionsServer(authorUsername, page, type),
     ]);
 
-    const questions: AuthorSchemaQuestion[] = questionsResponse.data || [];
+    const questions: Question[] = questionsResponse.data || [];
     const resolvedAuthorUsername = authorResponse.username ?? authorUsername;
 
     return (
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">در حال بارگذاری...</p>
+      <>
+        <JsonLd data={authorStructuredData(authorResponse, questions, type)} />
+        <Suspense
+          fallback={
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">در حال بارگذاری...</p>
+              </div>
             </div>
-          </div>
-        }
-      >
-        <AuthorSchema author={authorResponse} questions={questions} />
+          }
+        >
         <AuthorDetailPageContent
           initialAuthor={authorResponse}
           initialQuestions={questions}
@@ -143,7 +130,8 @@ export default async function AuthorDetailPage({ params, searchParams }: AuthorD
           authorUsername={resolvedAuthorUsername}
           initialType={type}
         />
-      </Suspense>
+        </Suspense>
+      </>
     );
   } catch (error) {
     console.error('Error fetching author data:', error);

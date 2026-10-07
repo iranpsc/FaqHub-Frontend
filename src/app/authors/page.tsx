@@ -1,7 +1,9 @@
 import { Suspense } from 'react';
 import { apiService } from '@/services/api';
 import { AuthorsPageContent } from './AuthorsPageContent';
+import { JsonLd } from '@/components/JsonLd';
 import { Metadata } from 'next';
+import { buildCollectionPage, SITE_URL } from '@/lib/schema';
 import { User, PaginatedResponse } from '@/services/types';
 
 export const revalidate = 120; // Revalidate every 2 minutes
@@ -72,29 +74,19 @@ export default async function AuthorsPage({ searchParams }: AuthorsPageProps) {
       total: 0,
     };
 
-    // JSON-LD Schema (optimized - limit to first 20 items)
-    const schema = {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      "name": "فعالان انجمن",
-      "description": "لیست تمام نویسندگان فعال در انجمن سوالات متداول",
-      "url": `https://faqhub.ir/authors`,
-      "numberOfItems": Math.min(authors.length, 20),
-      "itemListElement": authors.slice(0, 20).map((author, index) => ({
-        "@type": "ListItem",
-        "position": index + 1,
-        "url": `https://faqhub.ir/authors/${author.username ?? author.id}`,
-        "name": author.name,
-        "description": `${author.questions_count} سوال مرتبط`,
+    const schema = buildCollectionPage({
+      url: `${SITE_URL}/authors`,
+      name: 'فعالان انجمن',
+      description: 'لیست تمام نویسندگان فعال در انجمن سوالات متداول',
+      items: authors.slice(0, 20).map((author) => ({
+        name: author.name,
+        url: `${SITE_URL}/authors/${author.username ?? author.id}`,
       })),
-    };
+    });
 
     return (
       <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-        />
+        <JsonLd data={schema} />
 
         <Suspense fallback={
           <div className="min-h-screen flex items-center justify-center">

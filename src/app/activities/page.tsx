@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { ActivityPageContent } from "./ActivityPageContent";
+import { JsonLd } from "@/components/JsonLd";
 import { apiService } from "@/services/api";
+import { absoluteUrl, buildCollectionPage, SITE_URL } from "@/lib/schema";
 import {
   DailyActivity,
   ActivityApiResponse,
@@ -16,11 +18,12 @@ export async function generateMetadata() {
   return {
     title: "فعالیت‌ها | انجمن",
     description: "لیست آخرین فعالیت‌ها شامل سوالات، پاسخ‌ها و نظرات کاربران.",
+    alternates: { canonical: `${SITE_URL}/activities` },
     openGraph: {
       title: "فعالیت‌ها | انجمن",
       description: "آخرین فعالیت‌های کاربران شامل سوال، پاسخ و نظر",
-      url: "https://example.com/activities",
-      siteName: "انجمن من",
+      url: `${SITE_URL}/activities`,
+      siteName: "انجمن حم",
       images: [
         {
           url: "/main-logo.png",
@@ -97,56 +100,19 @@ export default async function ActivityPage() {
 
   const pagination: ActivityPagination | null = response.pagination ?? null;
 
-  // 🟢 فقط Schema: ItemList (optimized - limit to first 20 items)
-  const itemListSchema = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
+  const itemListSchema = buildCollectionPage({
+    url: `${SITE_URL}/activities`,
     name: "فعالیت‌های کاربران",
     description: "لیست سوالات، پاسخ‌ها و نظرات کاربران در انجمن",
-    itemListElement: activities.slice(0, 20).map((activityItem, index) => {
-      let itemType: "Article" | "Question" | "Answer" | "Comment" = "Article";
-      if (activityItem.type === "question") itemType = "Question";
-      if (activityItem.type === "answer") itemType = "Answer";
-      if (activityItem.type === "comment") itemType = "Comment";
-
-      return {
-        "@type": "ListItem",
-        position: index + 1,
-        item: {
-          "@type": itemType,
-          name: activityItem.description,
-          author: {
-            "@type": "Person",
-            name: activityItem.user_name,
-            // 🟢 لینک پروفایل کاربر برای رفع خطای "Missing field 'url'"
-            url: activityItem.user_url
-              ? `https://example.com${activityItem.user_url}`
-              : "https://example.com/users/unknown",
-          },
-          datePublished: activityItem.created_at,
-          url: activityItem.url
-            ? `https://example.com${activityItem.url}`
-            : "https://example.com/activities",
-          ...(activityItem.category_name && {
-            about: {
-              "@type": "Thing",
-              name: activityItem.category_name,
-            },
-          }),
-        },
-      };
-    }),
-  };
+    items: activities.slice(0, 20).map((activityItem) => ({
+      name: activityItem.title || activityItem.description,
+      url: absoluteUrl(activityItem.url),
+    })),
+  });
 
   return (
     <>
-      {/* 🟢 تزریق JSON-LD فقط ItemList */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(itemListSchema),
-        }}
-      />
+      <JsonLd data={itemListSchema} />
 
       <Suspense
         fallback={

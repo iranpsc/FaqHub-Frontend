@@ -1,5 +1,7 @@
 import TagContent from '@/components/TagContent';
+import { JsonLd } from '@/components/JsonLd';
 import { apiService } from '@/services/api';
+import { buildCollectionPage, SITE_URL } from '@/lib/schema';
 import { Metadata } from 'next';
 
 interface TagPageProps {
@@ -21,12 +23,14 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     const description = tag
       ? `مشاهده ${questions.length} سوال مرتبط با برچسب "${tag.name}" در سیستم سوالات متداول.`
       : `مشاهده سوالات مرتبط با برچسب "${slug}" در سیستم سوالات متداول.`;
+    const url = `${SITE_URL}/tags/${slug}`;
 
     return {
       title,
       description,
+      alternates: { canonical: url },
       keywords: `${tag?.name || slug}, برچسب, سوالات متداول, FAQ`,
-      openGraph: { title, description, type: 'website' ,
+      openGraph: { title, description, type: 'website', url,
         images: [
         {
           url: "/main-logo.png",
@@ -43,6 +47,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     return {
       title: 'سوالات برچسب',
       description: 'مشاهده سوالات برچسب‌ها در سیستم سوالات متداول',
+      alternates: { canonical: `${SITE_URL}/tags/${slug}` },
       keywords: 'برچسب, تگ, سوالات متداول, FAQ',
     };
   }
@@ -58,26 +63,20 @@ export default async function TagPage({ params }: TagPageProps) {
     const tag = tagData.tag || null;
     const pagination = tagData.meta || null;
 
-    // JSON-LD Schema
-    const schema = questions.length > 0 ? {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": questions.map(q => ({
-        "@type": "Question",
-        "name": q.title,
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": q.answer || "پاسخی ثبت نشده است."
-        }
-      }))
-    } : null;
+    const tagName = tag?.name || slug;
+    const schema = buildCollectionPage({
+      url: `${SITE_URL}/tags/${slug}`,
+      name: `سوالات برچسب ${tagName}`,
+      description: `سوالات مرتبط با برچسب ${tagName}`,
+      items: questions.map((question) => ({
+        name: question.title,
+        url: question.slug ? `${SITE_URL}/questions/${question.slug}` : undefined,
+      })),
+    });
 
     return (
       <>
-<script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-/>
+        <JsonLd data={schema} />
 
         <TagContent
           slug={slug}
