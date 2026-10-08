@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runner
       args:
         NODE_VERSION: "20"
         # NEXT_PUBLIC_* values are compiled into the Next.js client bundle.
