@@ -1,6 +1,7 @@
 # Dependencies & build artifacts (installed/built inside the image)
 node_modules
 .next
+logs
 out
 build
 coverage

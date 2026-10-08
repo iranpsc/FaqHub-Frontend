@@ -20,7 +20,7 @@ FROM base AS deps
 COPY package.json package-lock.json ./
 # BuildKit cache mount speeds rebuilds (DOCKER_BUILDKIT=1 / Compose v2 default)
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-audit --no-fund
+    npm ci --no-audit --no-fund --prefer-offline
 
 # -----------------------------------------------------------------------------
 # Builder: compile the Next.js app
@@ -37,7 +37,12 @@ ENV NODE_ENV=production
 ARG NEXT_PUBLIC_API_URL=https://api.faqhub.ir/api
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
-RUN npm run build
+# Call next directly so the package script's `rm -rf .next` cannot wipe the cache mount.
+# next/font copies public/fonts into .next/static, so the originals stay out of the runner.
+RUN --mount=type=cache,target=/app/.next/cache \
+    ./node_modules/.bin/next build \
+    && rm -rf public/fonts \
+    && find .next/standalone .next/static -name '*.map' -delete
 
 # -----------------------------------------------------------------------------
 # Runner: production image with standalone server only
