@@ -1,32 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import type { EditorConfig, Translations } from 'ckeditor5';
+import 'ckeditor5/ckeditor5.css';
 
 /** Minimal Editor-like type to avoid version conflicts between CKEditor packages */
 interface CKEditorInstance {
   plugins: { get: (name: string) => unknown };
+  getData: () => string;
 }
-
-interface CKEditorFileLoader {
-  file: Promise<File>;
-}
-
-type CKEditorConstructor = {
-  create: (...args: unknown[]) => Promise<CKEditorInstance>;
-  EditorWatchdog: unknown;
-  ContextWatchdog: unknown;
-};
-
-const ensureFileLoader = (loader: unknown): CKEditorFileLoader => {
-  if (!loader || typeof (loader as CKEditorFileLoader).file === 'undefined') {
-    throw new Error('Invalid CKEditor file loader');
-  }
-  return loader as CKEditorFileLoader;
-};
 
 type EditorWithExtras = CKEditorInstance & {
-  getData: () => string;
   ui: {
     view: {
       editable: { element: HTMLElement | null };
@@ -50,8 +35,6 @@ const CKEditor = dynamic(
   }
 );
 
-let ClassicEditor: CKEditorConstructor | null = null;
-
 interface BaseEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -72,12 +55,8 @@ const getEditorThemeColors = (isDark: boolean) => ({
   editableBg: isDark ? '#1f2937' : '#ffffff',
   editableColor: isDark ? '#f3f4f6' : '#000000',
   editableBorder: isDark ? '#4b5563' : '#c4c4c4',
-  mainBg: isDark ? '#1f2937' : '#ffffff',
   toolbarBg: isDark ? '#374151' : '#f8f9fa',
   toolbarBorder: isDark ? '#4b5563' : '#c4c4c4',
-  buttonColor: isDark ? '#f3f4f6' : '#000000',
-  buttonHoverBg: isDark ? '#4b5563' : '#e5e7eb',
-  buttonOnBg: isDark ? '#6b7280' : '#d1d5db',
 });
 
 export function BaseEditor({
@@ -91,6 +70,8 @@ export function BaseEditor({
   const [isClient, setIsClient] = useState(false);
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [editorModule, setEditorModule] = useState<typeof import('ckeditor5') | null>(null);
+  const [faTranslations, setFaTranslations] = useState<Translations | null>(null);
   const editorRef = useRef<EditorWithExtras | null>(null);
   const onReadyCleanupRef = useRef<(() => void) | null>(null);
 
@@ -142,114 +123,142 @@ export function BaseEditor({
     }
   }, [isDark, applyEditorTheme]);
 
-  class Base64UploadAdapter {
-    loader: CKEditorFileLoader;
-    constructor(loader: CKEditorFileLoader) {
-      this.loader = loader;
-    }
-    upload() {
-      return this.loader.file.then(
-        (file: File) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.addEventListener('load', () => resolve({ default: reader.result }));
-            reader.addEventListener('error', () => reject(reader.error));
-            reader.readAsDataURL(file);
-          })
-      );
-    }
-    abort() {}
-  }
+  const editorConfiguration = useMemo((): EditorConfig | null => {
+    if (!editorModule) return null;
 
-  function uploadPlugin(editor: CKEditorInstance) {
-    const fileRepository = editor.plugins.get('FileRepository') as unknown as {
-      createUploadAdapter: (loader: unknown) => unknown;
+    const {
+      Alignment,
+      Autoformat,
+      Base64UploadAdapter,
+      BlockQuote,
+      Bold,
+      Essentials,
+      Font,
+      Heading,
+      Image,
+      ImageCaption,
+      ImageStyle,
+      ImageTextAlternative,
+      ImageToolbar,
+      ImageUpload,
+      Indent,
+      IndentBlock,
+      Italic,
+      Link,
+      List,
+      MediaEmbed,
+      Paragraph,
+      PasteFromOffice,
+      Strikethrough,
+      Table,
+      TableToolbar,
+      Underline,
+    } = editorModule;
+
+    const plugins = [
+      Essentials,
+      Paragraph,
+      Heading,
+      Bold,
+      Italic,
+      Underline,
+      Strikethrough,
+      Font,
+      List,
+      Indent,
+      IndentBlock,
+      Alignment,
+      Link,
+      BlockQuote,
+      Table,
+      TableToolbar,
+      Image,
+      ImageCaption,
+      ImageStyle,
+      ImageToolbar,
+      ImageTextAlternative,
+      Autoformat,
+      PasteFromOffice,
+      MediaEmbed,
+      ...(imageUpload ? [ImageUpload, Base64UploadAdapter] : []),
+    ] as NonNullable<EditorConfig['plugins']>;
+
+    return {
+      licenseKey: 'GPL',
+      plugins,
+      placeholder,
+      language: rtl ? 'fa' : 'en',
+      translations: rtl && faTranslations ? [faTranslations] : undefined,
+      toolbar: [
+        'heading',
+        '|',
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        '|',
+        'fontSize',
+        'fontFamily',
+        '|',
+        'fontColor',
+        'fontBackgroundColor',
+        '|',
+        'bulletedList',
+        'numberedList',
+        '|',
+        'outdent',
+        'indent',
+        '|',
+        'alignment',
+        '|',
+        'link',
+        'blockQuote',
+        'insertTable',
+        '|',
+        ...(imageUpload ? ['imageUpload'] : []),
+        '|',
+        'undo',
+        'redo',
+      ],
+      image: {
+        toolbar: [
+          'imageTextAlternative',
+          'toggleImageCaption',
+          'imageStyle:inline',
+          'imageStyle:block',
+          'imageStyle:side',
+        ],
+      },
+      table: {
+        contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells'],
+      },
     };
-    fileRepository.createUploadAdapter = (loader: unknown) => new Base64UploadAdapter(ensureFileLoader(loader));
-  }
-
-  const colors = getEditorThemeColors(isDark);
-  const editorHeight = getResponsiveHeight();
-
-  const editorConfiguration: Record<string, unknown> = {
-    placeholder,
-    extraPlugins: imageUpload ? [uploadPlugin] : [],
-    language: rtl ? 'fa' : 'en',
-    direction: rtl ? 'rtl' : 'ltr',
-    toolbar: [
-      'heading',
-      '|',
-      'bold',
-      'italic',
-      'underline',
-      'strikethrough',
-      '|',
-      'fontSize',
-      'fontFamily',
-      '|',
-      'fontColor',
-      'fontBackgroundColor',
-      '|',
-      'bulletedList',
-      'numberedList',
-      '|',
-      'outdent',
-      'indent',
-      '|',
-      'alignment',
-      '|',
-      'link',
-      'blockQuote',
-      'insertTable',
-      '|',
-      ...(imageUpload ? ['imageUpload'] : []),
-      '|',
-      'undo',
-      'redo',
-    ],
-    styles: `
-      .ck-editor__editable {
-        background-color: ${colors.editableBg} !important;
-        color: ${colors.editableColor} !important;
-        border: 1px solid ${colors.editableBorder} !important;
-        resize: none !important;
-        overflow: auto !important;
-        min-height: ${editorHeight}px !important;
-        height: ${editorHeight}px !important;
-      }
-      .ck-editor__main {
-        background-color: ${colors.mainBg} !important;
-      }
-      .ck-toolbar {
-        background-color: ${colors.toolbarBg} !important;
-        border: 1px solid ${colors.toolbarBorder} !important;
-      }
-      .ck-button {
-        color: ${colors.buttonColor} !important;
-      }
-      .ck-button:hover {
-        background-color: ${colors.buttonHoverBg} !important;
-      }
-      .ck-button.ck-on {
-        background-color: ${colors.buttonOnBg} !important;
-        color: ${colors.buttonColor} !important;
-      }
-    `,
-  };
+  }, [editorModule, faTranslations, imageUpload, placeholder, rtl]);
 
   useEffect(() => {
     setIsClient(true);
+    let cancelled = false;
+
     const loadEditor = async () => {
       try {
-        const editorModule = await import('@ckeditor/ckeditor5-build-classic');
-        ClassicEditor = editorModule.default as unknown as CKEditorConstructor;
-        setEditorLoaded(true);
+        const [ckeditor, fa] = await Promise.all([
+          import('ckeditor5'),
+          import('ckeditor5/translations/fa.js'),
+        ]);
+        if (cancelled) return;
+        setEditorModule(ckeditor);
+        setFaTranslations(fa.default);
       } catch (error) {
         console.error('Failed to load CKEditor:', error);
-        setEditorLoaded(true);
+      } finally {
+        if (!cancelled) setEditorLoaded(true);
       }
     };
+
     loadEditor();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(
@@ -260,8 +269,7 @@ export function BaseEditor({
   );
 
   const handleEditorChange = (_event: unknown, editor: CKEditorInstance) => {
-    const enhancedEditor = editor as EditorWithExtras;
-    onChange(enhancedEditor.getData());
+    onChange(editor.getData());
   };
 
   if (!isClient || !editorLoaded) {
@@ -274,55 +282,59 @@ export function BaseEditor({
     );
   }
 
+  if (!editorModule || !editorConfiguration) {
+    return (
+      <div className={`base-editor border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 transition-colors duration-200 ${className}`} />
+    );
+  }
+
   return (
     <div className={`base-editor border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 transition-colors duration-200 ${className}`}>
-      {ClassicEditor && (
-        <CKEditor
-          editor={ClassicEditor as never}
-          config={editorConfiguration}
-          data={value}
-          onReady={(editor) => {
-            const enhancedEditor = editor as EditorWithExtras;
-            editorRef.current = enhancedEditor;
+      <CKEditor
+        editor={editorModule.ClassicEditor}
+        config={editorConfiguration}
+        data={value}
+        onReady={(editor) => {
+          const enhancedEditor = editor as EditorWithExtras;
+          editorRef.current = enhancedEditor;
 
-            const editableElement = enhancedEditor.ui.view.editable.element;
+          const editableElement = enhancedEditor.ui.view.editable.element;
 
+          if (editableElement) {
+            const height = getResponsiveHeight();
+            editableElement.style.height = `${height}px`;
+            editableElement.style.minHeight = `${height}px`;
+            editableElement.style.resize = 'none';
+            editableElement.style.overflow = 'auto';
+          }
+
+          applyEditorTheme(enhancedEditor, isDark);
+
+          const observer = new MutationObserver(() => {
             if (editableElement) {
               const height = getResponsiveHeight();
               editableElement.style.height = `${height}px`;
               editableElement.style.minHeight = `${height}px`;
-              editableElement.style.resize = 'none';
-              editableElement.style.overflow = 'auto';
             }
+          });
+          observer.observe(editableElement!, { attributes: true, attributeFilter: ['style'] });
 
-            applyEditorTheme(enhancedEditor, isDark);
+          const handleResize = () => {
+            const height = getResponsiveHeight();
+            if (editableElement) {
+              editableElement.style.height = `${height}px`;
+              editableElement.style.minHeight = `${height}px`;
+            }
+          };
 
-            const observer = new MutationObserver(() => {
-              if (editableElement) {
-                const height = getResponsiveHeight();
-                editableElement.style.height = `${height}px`;
-                editableElement.style.minHeight = `${height}px`;
-              }
-            });
-            observer.observe(editableElement!, { attributes: true, attributeFilter: ['style'] });
-
-            const handleResize = () => {
-              const height = getResponsiveHeight();
-              if (editableElement) {
-                editableElement.style.height = `${height}px`;
-                editableElement.style.minHeight = `${height}px`;
-              }
-            };
-
-            window.addEventListener('resize', handleResize);
-            onReadyCleanupRef.current = () => {
-              window.removeEventListener('resize', handleResize);
-              observer.disconnect();
-            };
-          }}
-          onChange={handleEditorChange}
-        />
-      )}
+          window.addEventListener('resize', handleResize);
+          onReadyCleanupRef.current = () => {
+            window.removeEventListener('resize', handleResize);
+            observer.disconnect();
+          };
+        }}
+        onChange={handleEditorChange}
+      />
     </div>
   );
 }

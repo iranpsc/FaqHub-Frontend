@@ -44,6 +44,7 @@ const {
 const nextConfig: NextConfig = {
   // Standalone output for minimal Docker images (copies only traced deps)
   output: "standalone",
+  transpilePackages: ["ckeditor5"],
   compress: true,
   poweredByHeader: false,
 
