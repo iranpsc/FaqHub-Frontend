@@ -109,7 +109,23 @@ export function QuestionModal({
     }
   }, [visible]);
 
-  // Populate form when questionToEdit or options change (to resolve category by id if needed)
+  const resetForm = useCallback(() => {
+    setForm({
+      id: null,
+      category: null,
+      title: '',
+      content: '',
+      tags: [],
+    });
+    setErrors({});
+  }, []);
+
+  // Populate form only when the question being edited changes.
+  // IMPORTANT: this must NOT depend on categoryOptions (or any other list that is
+  // refreshed while the user interacts with the form). The category dropdown
+  // refetches/merges its options when it opens, and depending on that list here
+  // used to call resetForm() in create mode, wiping the selected category,
+  // title and content.
   useEffect(() => {
     if (questionToEdit) {
       const resolvedCategory: Category | null = questionToEdit.category
@@ -118,7 +134,7 @@ export function QuestionModal({
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           }
-        : (categoryOptions.find(c => c.id === questionToEdit.category?.id) || null);
+        : null;
 
       setForm({
         id: questionToEdit.id,
@@ -130,18 +146,7 @@ export function QuestionModal({
     } else {
       resetForm();
     }
-  }, [questionToEdit, categoryOptions]);
-
-  const resetForm = () => {
-    setForm({
-      id: null,
-      category: null,
-      title: '',
-      content: '',
-      tags: [],
-    });
-    setErrors({});
-  };
+  }, [questionToEdit, resetForm]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
