@@ -19,5 +19,7 @@ services:
       # Runtime value for server-side code; the client bundle uses the build arg above.
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     restart: unless-stopped
+    volumes:
+      - ${SITEMAPS_HOST_PATH}:/app/public/sitemaps:ro
     # Do not bind to host network; publish only the app port
     # Use `docker compose up --build -d` to build and run

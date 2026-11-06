@@ -32,6 +32,7 @@ services:
       - .:/app
       - web_node_modules:/app/node_modules
       - web_next:/app/.next
+      - ${SITEMAPS_HOST_PATH}:/app/public/sitemaps:ro
     restart: unless-stopped
 
 volumes:
