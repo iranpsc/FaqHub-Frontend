@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode, useRef, useCallback } from 'react';
 import type { AuthUser } from '@/types/auth';
+import { PUBLIC_API_URL } from '@/lib/apiConfig';
 
 type User = AuthUser;
 
@@ -134,7 +135,7 @@ export function AuthProvider({ children, initialUser = null, initialToken = null
 
     fetchUserInFlightRef.current = (async () => {
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        const apiBaseUrl = PUBLIC_API_URL;
         const response = await fetch(`${apiBaseUrl}/auth/me`, {
           headers: {
             'Authorization': `Bearer ${tokenToUse}`,
@@ -271,7 +272,7 @@ export function AuthProvider({ children, initialUser = null, initialToken = null
     try {
       // Send current path as intended URL to backend
       const intendedUrl = window.location.href;
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+      const apiBaseUrl = PUBLIC_API_URL;
       const response = await fetch(`${apiBaseUrl}/auth/redirect`, {
         method: 'POST',
         headers: {
@@ -300,7 +301,7 @@ export function AuthProvider({ children, initialUser = null, initialToken = null
     setIsLogoutLoading(true);
     if (token) {
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        const apiBaseUrl = PUBLIC_API_URL;
         await fetch(`${apiBaseUrl}/auth/logout`, {
           method: 'POST',
           headers: {

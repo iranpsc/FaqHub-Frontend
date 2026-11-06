@@ -14,13 +14,10 @@ import {
   ApiError,
   QuestionActionResponse,
 } from './types';
+import { PUBLIC_API_URL, SERVER_API_URL } from '@/lib/apiConfig';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-const SERVER_API_BASE_URL =
-  process.env.SERVER_API_URL ||
-  (process.env.NODE_ENV === 'production'
-    ? 'https://api.faqhub.ir/api'
-    : 'http://localhost:8000/api');
+const API_BASE_URL = PUBLIC_API_URL;
+const SERVER_API_BASE_URL = SERVER_API_URL;
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 const CLIENT_TIMEOUT_MS = 30_000;

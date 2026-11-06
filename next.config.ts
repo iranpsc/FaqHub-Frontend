@@ -2,21 +2,21 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 function resolveApiConfig() {
-  const clientApiUrl =
-    process.env.NEXT_PUBLIC_API_URL ||
-    (process.env.NODE_ENV === "production"
-      ? "https://api.faqhub.ir/api"
-      : "http://localhost:8000/api");
+  const clientApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+
+  if (!clientApiUrl) {
+    throw new Error("NEXT_PUBLIC_API_URL must be defined in the frontend environment.");
+  }
 
   const isRelativeApiUrl = clientApiUrl.startsWith("/");
 
-  const backendApiUrl =
-    process.env.SERVER_API_URL ||
-    (isRelativeApiUrl
-      ? process.env.NODE_ENV === "production"
-        ? "https://api.faqhub.ir/api"
-        : "http://localhost:8000/api"
-      : clientApiUrl);
+  const backendApiUrl = process.env.SERVER_API_URL?.trim() || clientApiUrl;
+
+  if (isRelativeApiUrl && !process.env.SERVER_API_URL) {
+    throw new Error(
+      "SERVER_API_URL must be defined when NEXT_PUBLIC_API_URL is a relative URL."
+    );
+  }
 
   const backendOrigin = new URL(backendApiUrl).origin;
   const backendRemotePattern = {

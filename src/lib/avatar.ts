@@ -3,8 +3,10 @@ type AvatarUser = {
   image?: string | null;
 };
 
+import { PUBLIC_API_URL } from '@/lib/apiConfig';
+
 function apiOrigin(): string {
-  const apiUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '');
+  const apiUrl = PUBLIC_API_URL.replace(/\/$/, '');
   if (apiUrl && apiUrl !== '/api' && !apiUrl.startsWith('/')) {
     return apiUrl.replace(/\/api$/, '');
   }
@@ -13,7 +15,7 @@ function apiOrigin(): string {
     return window.location.origin;
   }
 
-  return 'https://api.faqhub.ir';
+  return '';
 }
 
 /**

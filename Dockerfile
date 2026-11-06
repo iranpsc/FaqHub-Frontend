@@ -34,7 +34,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # NEXT_PUBLIC_* must be set at build time (inlined into the client bundle)
-ARG NEXT_PUBLIC_API_URL=https://api.faqhub.ir/api
+ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 # Call next directly so the package script's `rm -rf .next` cannot wipe the cache mount.
