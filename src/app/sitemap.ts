@@ -56,7 +56,10 @@ function entry(path: string, lastModified?: string | null, priority = 0.6): Meta
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [questions, categories, tags, authors] = await Promise.all([
-    collectPages((page) => apiService.getQuestionsServer({ page }, false), 30),
+    // Sitemap generation only needs question URLs and timestamps. Request the
+    // lightweight representation so large editor contents are not cached by
+    // Next.js while the sitemap is built.
+    collectPages((page) => apiService.getQuestionsServer({ page, summary: 1 }, false), 30),
     collectPages((page) => apiService.getCategoriesPaginatedServer({ page, per_page: 50 }, false), 10),
     collectPages((page) => apiService.getTagsPaginatedServer({ page, per_page: 50 }, false), 10),
     collectPages((page) => apiService.getAuthorsServer({ page, per_page: 50 }, false), 10),
