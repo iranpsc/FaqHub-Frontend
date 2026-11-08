@@ -985,10 +985,11 @@ class ApiService {
       }
     }
 
-    const config: RequestInit = {
+    const config = {
       ...options,
       headers,
       signal: controller.signal,
+      ...(includeRequestAuth ? {} : { next: { revalidate: 60 } }),
     };
 
     const doRequest = async (): Promise<T> => {
@@ -1085,9 +1086,12 @@ class ApiService {
     );
   }
 
-  async getActiveUsersServer(limit: number = 10): Promise<User[]> {
+  async getActiveUsersServer(limit: number = 10, includeRequestAuth: boolean = true): Promise<User[]> {
     const response = await this.serverRequest<{ data: User[] }>(
-      `/dashboard/active-users?limit=${limit}`
+      `/dashboard/active-users?limit=${limit}`,
+      {},
+      SERVER_TIMEOUT_MS,
+      includeRequestAuth
     );
     return response.data.map(mapActiveUser);
   }
