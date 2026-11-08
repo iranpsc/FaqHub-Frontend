@@ -1,12 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { Header, Sidebar, Footer } from './index';
-import { QuestionModal } from '@/components/QuestionModal';
-import { AuthDialog } from '@/components/AuthDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { Question } from '@/services/api';
 import clsx from 'clsx';
+
+// These dialogs are only needed after an explicit user action. Keeping them out
+// of the application shell prevents the editor and dialog dependencies from
+// inflating every route's initial payload.
+const QuestionModal = dynamic(
+  () => import('@/components/QuestionModal').then((module) => module.QuestionModal),
+  { ssr: false }
+);
+const AuthDialog = dynamic(
+  () => import('@/components/AuthDialog').then((module) => module.AuthDialog),
+  { ssr: false }
+);
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);

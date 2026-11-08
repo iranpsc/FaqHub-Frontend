@@ -62,6 +62,7 @@ export function SearchComponent({
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchInput = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
   
   // State
   const [searchQuery, setSearchQuery] = useState(modelValue);
@@ -89,21 +90,29 @@ export function SearchComponent({
       return;
     }
 
+    searchAbortControllerRef.current?.abort();
+    const controller = new AbortController();
+    searchAbortControllerRef.current = controller;
+
     setIsLoading(true);
     setShowDropdown(true);
 
     try {
-      const questions = await apiService.searchQuestions(query.trim(), 50);
+      const questions = await apiService.searchQuestions(query.trim(), 50, controller.signal);
+      if (controller.signal.aborted) return;
       setAllSearchResults(questions);
       setSearchResults(questions.slice(0, 10));
       setShowLimit(10);
     } catch (error) {
+      if (controller.signal.aborted) return;
       console.error('Search failed:', error);
       setSearchResults([]);
       setAllSearchResults([]);
     } finally {
-      setIsLoading(false);
-      setSelectedIndex(-1);
+      if (searchAbortControllerRef.current === controller) {
+        setIsLoading(false);
+        setSelectedIndex(-1);
+      }
     }
   }, []);
 
@@ -115,6 +124,7 @@ export function SearchComponent({
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
+    searchAbortControllerRef.current?.abort();
     
     searchTimeoutRef.current = setTimeout(() => {
       performSearch(value);
@@ -229,6 +239,7 @@ export function SearchComponent({
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
+      searchAbortControllerRef.current?.abort();
     };
   }, [handleClickOutside]);
 

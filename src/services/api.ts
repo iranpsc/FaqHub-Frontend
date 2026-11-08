@@ -263,6 +263,15 @@ class ApiService {
     };
 
     const controller = new AbortController();
+    const externalSignal = options.signal;
+    const abortFromExternalSignal = () => controller.abort();
+    if (externalSignal) {
+      if (externalSignal.aborted) {
+        controller.abort();
+      } else {
+        externalSignal.addEventListener('abort', abortFromExternalSignal, { once: true });
+      }
+    }
     const timeoutId = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
 
     try {
@@ -312,6 +321,8 @@ class ApiService {
       }
 
       throw error;
+    } finally {
+      externalSignal?.removeEventListener('abort', abortFromExternalSignal);
     }
   }
 
@@ -372,13 +383,17 @@ class ApiService {
     return response.data;
   }
 
-  async searchQuestions(query: string, limit: number = 50): Promise<Question[]> {
+  async searchQuestions(
+    query: string,
+    limit: number = 50,
+    signal?: AbortSignal
+  ): Promise<Question[]> {
     const q = encodeURIComponent(query);
     const response = await this.request<{
       success: boolean;
       data: Record<string, unknown> | Question[];
       message?: string;
-    }>(`/questions/search?q=${q}&limit=${limit}`);
+    }>(`/questions/search?q=${q}&limit=${limit}`, { signal });
 
     const payload = response.data;
     if (Array.isArray(payload)) return payload as Question[];
@@ -904,7 +919,8 @@ class ApiService {
   async serverRequest<T>(
     endpoint: string,
     options: RequestInit = {},
-    timeout: number = SERVER_TIMEOUT_MS
+    timeout: number = SERVER_TIMEOUT_MS,
+    includeRequestAuth: boolean = true
   ): Promise<T> {
     const url = `${SERVER_API_BASE_URL}${endpoint}`;
     const cacheKey = getServerRequestCacheKey(endpoint, options);
@@ -932,7 +948,7 @@ class ApiService {
       headers.set('Content-Type', 'application/json');
     }
 
-    if (!isBrowser()) {
+    if (!isBrowser() && includeRequestAuth) {
       try {
         const { cookies: getCookies, headers: getHeaders } = await import('next/headers');
         const cookieStore = await getCookies();
@@ -1058,9 +1074,15 @@ class ApiService {
   }
 
   async getQuestionsServer(
-    params: Record<string, unknown> = {}
+    params: Record<string, unknown> = {},
+    includeRequestAuth: boolean = true
   ): Promise<PaginatedResponse<Question>> {
-    return this.serverRequest<PaginatedResponse<Question>>(withQuery('/questions', params));
+    return this.serverRequest<PaginatedResponse<Question>>(
+      withQuery('/questions', params),
+      {},
+      SERVER_TIMEOUT_MS,
+      includeRequestAuth
+    );
   }
 
   async getActiveUsersServer(limit: number = 10): Promise<User[]> {
@@ -1080,16 +1102,28 @@ class ApiService {
   }
 
   async getTagsPaginatedServer(
-    params: Record<string, unknown> = {}
+    params: Record<string, unknown> = {},
+    includeRequestAuth: boolean = true
   ): Promise<PaginatedResponse<Tag>> {
-    return this.serverRequest<PaginatedResponse<Tag>>(withQuery('/tags', params));
+    return this.serverRequest<PaginatedResponse<Tag>>(
+      withQuery('/tags', params),
+      {},
+      SERVER_TIMEOUT_MS,
+      includeRequestAuth
+    );
   }
 
   // Server-side category methods
   async getCategoriesPaginatedServer(
-    params: Record<string, unknown> = {}
+    params: Record<string, unknown> = {},
+    includeRequestAuth: boolean = true
   ): Promise<PaginatedResponse<Category>> {
-    return this.serverRequest<PaginatedResponse<Category>>(withQuery('/categories', params));
+    return this.serverRequest<PaginatedResponse<Category>>(
+      withQuery('/categories', params),
+      {},
+      SERVER_TIMEOUT_MS,
+      includeRequestAuth
+    );
   }
 
   async getCategoryServer(slug: string): Promise<Category & { children?: Category[] }> {
@@ -1107,9 +1141,15 @@ class ApiService {
 
   // Server-side author methods
   async getAuthorsServer(
-    params: Record<string, unknown> = {}
+    params: Record<string, unknown> = {},
+    includeRequestAuth: boolean = true
   ): Promise<PaginatedResponse<User>> {
-    return this.serverRequest<PaginatedResponse<User>>(withQuery('/authors', params));
+    return this.serverRequest<PaginatedResponse<User>>(
+      withQuery('/authors', params),
+      {},
+      SERVER_TIMEOUT_MS,
+      includeRequestAuth
+    );
   }
 
   async getAuthorServer(username: string): Promise<User> {

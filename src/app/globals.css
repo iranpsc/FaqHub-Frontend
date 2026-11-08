@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap');
 @import "sweetalert2/dist/sweetalert2.min.css";
 @tailwind base;
 @tailwind components;
@@ -20,7 +19,7 @@
 }
 
 html, body, * {
-  font-family: azarMehr;
+  font-family: var(--font-azarMehr), system-ui, Tahoma, sans-serif;
 }
 
 body {
