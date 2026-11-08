@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { ContentArea } from '@/components/ContentArea';
-import { ActiveUsersSlider } from '@/components/ActiveUsersSlider';
 import { PopularCategories } from '@/components/PopularCategories';
 import { FilterQuestion } from '@/components/FilterQuestion';
 import { QuestionCard } from '@/components/QuestionCard';
@@ -16,6 +16,11 @@ import { useUsers } from '@/hooks/useUsers';
 import { Question, Category, User } from '@/services/api';
 
 const ACTIVE_USERS_SLIDER_LIMIT = 12;
+
+const ActiveUsersSlider = dynamic(
+  () => import('@/components/ActiveUsersSlider').then((module) => module.ActiveUsersSlider),
+  { ssr: false }
+);
 
 type PaginationMeta = {
   current_page: number;

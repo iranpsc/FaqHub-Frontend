@@ -173,20 +173,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {/* Question Modal */}
-      <QuestionModal
-        visible={showQuestionModal}
-        questionToEdit={questionToEdit}
-        onClose={() => setShowQuestionModal(false)}
-        onQuestionCreated={handleQuestionCreated}
-        onQuestionUpdated={handleQuestionUpdated}
-      />
+      {/* Load dialogs only after the user opens them. */}
+      {showQuestionModal && (
+        <QuestionModal
+          visible
+          questionToEdit={questionToEdit}
+          onClose={() => setShowQuestionModal(false)}
+          onQuestionCreated={handleQuestionCreated}
+          onQuestionUpdated={handleQuestionUpdated}
+        />
+      )}
 
-      {/* Auth Dialog */}
-      <AuthDialog
-        visible={showAuthDialog}
-        onClose={() => setShowAuthDialog(false)}
-      />
+      {showAuthDialog && (
+        <AuthDialog
+          visible
+          onClose={() => setShowAuthDialog(false)}
+        />
+      )}
     </div>
   );
 }

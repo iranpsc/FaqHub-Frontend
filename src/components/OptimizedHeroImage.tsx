@@ -24,6 +24,7 @@ export const OptimizedHeroImage: React.FC<OptimizedHeroImageProps> = ({
         className="w-full h-auto object-cover"
        
         priority
+        fetchPriority="high"
         sizes="(max-width: 480px) 100vw, (max-width: 768px) 100vw, (max-width: 1024px) 80vw, 1200px"
         quality={85}
         

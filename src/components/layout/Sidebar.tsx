@@ -447,7 +447,6 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
             block
             disabled={isLoginLoading}
             className="mb-4 flex justify-between"
-            aria-label='login '
           >
             {isLoginLoading ? (
               <svg className="w-4 h-4 md:w-7 md:h-7 animate-spin" fill="none" viewBox="0 0 24 24">
