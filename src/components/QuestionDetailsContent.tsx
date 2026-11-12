@@ -8,7 +8,6 @@ import { QuestionContent } from '@/components/question/QuestionContent';
 const DynamicCommentsSection = dynamic(
   () => import('@/components/question/CommentsSection').then(m => m.CommentsSection),
   {
-    ssr: false,
     loading: () => (
       <div className="mt-4">
         <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-3" />
@@ -23,7 +22,6 @@ const DynamicCommentsSection = dynamic(
 const DynamicAnswersSection = dynamic(
   () => import('@/components/question/AnswersSection').then(m => m.AnswersSection),
   {
-    ssr: false,
     loading: () => (
       <div className="mt-6 space-y-4">
         <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-48" />
@@ -43,14 +41,21 @@ import { useSweetAlert } from '@/hooks/useSweetAlert';
 import { apiService } from '@/services/api';
 import { useRouter } from 'next/navigation';
 import { Answer, VoteChangedData, CommentData, Question } from '@/services/types';
+import type { QaPageComments } from '@/lib/schema';
 
 interface QuestionDetailsContentProps {
   slug: string;
   initialQuestion: Question | null;
   initialAnswers: Answer[];
+  initialCommentExtras?: QaPageComments;
 }
 
-export default function QuestionDetailsContent({ slug, initialQuestion, initialAnswers }: QuestionDetailsContentProps) {
+export default function QuestionDetailsContent({
+  slug,
+  initialQuestion,
+  initialAnswers,
+  initialCommentExtras,
+}: QuestionDetailsContentProps) {
   const { fire: swalFire, showLoading, close } = useSweetAlert();
   const router = useRouter();
 
@@ -284,6 +289,14 @@ export default function QuestionDetailsContent({ slug, initialQuestion, initialA
               questionId={question.id} 
               parentType="question"
               onCommentAdded={() => {}}
+              initialComments={initialCommentExtras?.questionComments}
+              initialPagination={initialCommentExtras?.questionCommentTotal !== undefined
+                ? {
+                    current_page: 1,
+                    last_page: initialCommentExtras.questionCommentLastPage ?? 1,
+                    total: initialCommentExtras.questionCommentTotal ?? initialCommentExtras.questionComments?.length ?? 0,
+                  }
+                : null}
             />
 
             <DynamicAnswersSection 
@@ -294,6 +307,7 @@ export default function QuestionDetailsContent({ slug, initialQuestion, initialA
               onVoteChanged={handleAnswerVoteChanged}
               onAnswerCorrectnessChanged={handleAnswerCorrectnessChanged}
               onCommentAdded={handleAnswerCommentAdded}
+              initialAnswerComments={initialCommentExtras?.answerComments}
             />
           </>
         )}

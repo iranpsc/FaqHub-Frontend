@@ -210,7 +210,7 @@ Set at minimum:
 
 ## Deployment (Production Server)
 
-This frontend is a **Next.js 15** app. In production it listens on **port 3005** and talks to the FAQ API (`NEXT_PUBLIC_API_URL`, default `https://api.faqhub.ir/api`).
+This frontend is a **Next.js 15** app. In production it listens on **port 3005** and talks to the FAQ API configured by `NEXT_PUBLIC_API_URL`.
 
 **Recommended approach:** Docker. **Alternative:** Node + PM2 on the host.
 
@@ -219,19 +219,19 @@ This frontend is a **Next.js 15** app. In production it listens on **port 3005**
 - Linux server with Docker Engine + Docker Compose **or** Node.js 20+ and npm
 - Git access to this repository
 - Firewall/reverse proxy allowing inbound HTTPS (and optionally SSH)
-- Outbound HTTPS to the API host (`api.faqhub.ir` or your own API)
+- Outbound HTTPS to the API host (`dev-api.faqhub.ir` or your own API)
 
 ### Environment variables
 
 | Variable | When | Description |
 |----------|------|-------------|
-| `NEXT_PUBLIC_API_URL` | **Build time** (required for client) | Public API base URL, e.g. `https://api.faqhub.ir/api` |
+| `NEXT_PUBLIC_API_URL` | **Build time** (required for client) | Public API base URL, e.g. `https://dev-api.faqhub.ir/api` |
 | `NODE_ENV` | Runtime | Must be `production` |
 | `PORT` | Runtime | App port (default `3005`) |
 | `HOSTNAME` | Runtime (Docker) | Bind address; use `0.0.0.0` in containers |
 | `NEXT_PUBLIC_SITE_URL` | Optional | Canonical site URL for SEO/metadata |
 
-> `NEXT_PUBLIC_*` values are inlined into the client bundle at **build** time. Changing them later requires a rebuild (or a new image), not only a container restart.
+> Copy `.env.example` to `.env` and set `NEXT_PUBLIC_API_URL` before building. `NEXT_PUBLIC_*` values are inlined into the client bundle at **build** time, so changing them later requires a rebuild (or a new image), not only a container restart.
 
 ### Option A — Docker (recommended)
 
@@ -242,9 +242,10 @@ This frontend is a **Next.js 15** app. In production it listens on **port 3005**
    git checkout main   # or your release tag/branch
    ```
 
-2. **Set production API URL** (optional override) in `docker-compose.yml` under `build.args` and `environment`, or pass build args:
+2. **Set production API URL** in `.env`:
    ```bash
-   docker compose build --build-arg NEXT_PUBLIC_API_URL=https://api.faqhub.ir/api
+   cp .env.example .env
+   # Edit .env and set NEXT_PUBLIC_API_URL
    ```
 
 3. **Build and start** in detached mode:
@@ -283,7 +284,8 @@ Use this if you prefer running the app directly on the host (see `ecosystem.conf
    cd faq-frontend
    npm ci
    export NODE_ENV=production
-   export NEXT_PUBLIC_API_URL=https://api.faqhub.ir/api
+   cp .env.example .env
+   # Edit .env and set NEXT_PUBLIC_API_URL
    npm run build
    ```
 
@@ -307,7 +309,8 @@ Use this if you prefer running the app directly on the host (see `ecosystem.conf
    ```bash
    git pull
    npm ci
-   NEXT_PUBLIC_API_URL=https://api.faqhub.ir/api npm run build
+   # Update .env if the API URL changed, then rebuild.
+   npm run build
    pm2 reload ecosystem.config.js --env production
    ```
 

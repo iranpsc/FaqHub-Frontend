@@ -12,8 +12,6 @@ import {
   Tag, 
   Clock, 
   Users, 
-  Newspaper, 
-  UserCheck, 
   Info, 
   Mail, 
   Globe, 
@@ -192,8 +190,6 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
     { href: '/tags', icon: Tag, label: 'برچسب ها' },
     { href: '/activities', icon: Clock, label: 'فعالیت ها' },
     { href: '/authors', icon: Users, label: 'فعالان انجمن' },
-    { href: '/news', icon: Newspaper, label: 'اخبار متاورس' },
-    { href: '/metaverse', icon: UserCheck, label: 'انجمن متاورس' },
     { href: '/about', icon: Info, label: 'درباره ما' },
     { href: '/contact', icon: Mail, label: 'ارتباط با ما' },
     { href: '#language', icon: Globe, label: 'زبان' },
@@ -297,7 +293,6 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
                 <button 
                   onClick={toggleUserDropdown} 
                   aria-expanded={userDropdownOpen}
-                  aria-label="باز کردن منوی کاربر"
                   className="flex items-center gap-3 w-full p-2 rounded-lg transition-colors outline-none focus:outline-none focus:ring-0 focus:border-0"
                 >
                   <BaseAvatar 
@@ -345,7 +340,7 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
                   className="overflow-hidden transition-all duration-300 ease-in-out"
                   style={{ maxHeight: userDropdownOpen ? '200px' : '0px' }}
                 >
-                  <div className="mt-2 ml-4 space-y-1">
+                  <div className="mt-2 ml-4 space-y-1" role="menu">
                     <Link 
                       href="/profile" 
                       onClick={handleMenuItemClick}
@@ -452,7 +447,6 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
             block
             disabled={isLoginLoading}
             className="mb-4 flex justify-between"
-            aria-label='login '
           >
             {isLoginLoading ? (
               <svg className="w-4 h-4 md:w-7 md:h-7 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -475,7 +469,6 @@ export function Sidebar({ isOpen, mounted = false, theme, themeMode, onToggle, o
             block
             disabled={isLogoutLoading}
             className="mb-4 flex justify-between"
-            aria-label='log out '
           >
             {isLogoutLoading ? (
               <svg className="w-4 h-4 md:w-7 md:h-7 animate-spin" fill="none" viewBox="0 0 24 24">

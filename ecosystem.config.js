@@ -10,12 +10,10 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: 3000,
-        NEXT_PUBLIC_API_URL: 'https://api.faqhub.ir/api'
       },
       env_production: {
         NODE_ENV: 'production',
         PORT: 3000,
-        NEXT_PUBLIC_API_URL: 'https://api.faqhub.ir/api'
       },
       // Logging (ensure ./logs directory exists before starting)
       log_file: './logs/combined.log',

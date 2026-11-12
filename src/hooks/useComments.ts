@@ -2,18 +2,23 @@ import { useState, useCallback } from 'react';
 import { apiService } from '@/services/api';
 import { Comment } from '@/services/types';
 
-export function useComments() {
-  const [comments, setComments] = useState<Comment[]>([]);
+export function useComments(initialComments: Comment[] = []) {
+  const [comments, setComments] = useState<Comment[]>(initialComments);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-  const fetchComments = useCallback(async (parentId: string, parentType: 'question' | 'answer', page: number = 1) => {
+  const fetchComments = useCallback(async (
+    parentId: string,
+    parentType: 'question' | 'answer',
+    page: number = 1,
+    append: boolean = false
+  ) => {
     setIsLoading(true);
     try {
       const response = await apiService.getComments(parentId, parentType, page);
-      setComments(response.data || []);
+      setComments((previous) => append ? [...previous, ...(response.data || [])] : (response.data || []));
       return { success: true, data: response.data, meta: response.meta };
     } catch (error) {
       console.error('Error fetching comments:', error);

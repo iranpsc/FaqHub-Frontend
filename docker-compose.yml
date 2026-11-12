@@ -7,7 +7,7 @@ services:
       args:
         NODE_VERSION: "20"
         # NEXT_PUBLIC_* values are compiled into the Next.js client bundle.
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.faqhub.ir/api}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     image: faq-frontend:latest
     container_name: faq-frontend
     ports:
@@ -17,7 +17,9 @@ services:
       PORT: "3005"
       HOSTNAME: "0.0.0.0"
       # Runtime value for server-side code; the client bundle uses the build arg above.
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.faqhub.ir/api}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     restart: unless-stopped
+    volumes:
+      - ${SITEMAPS_HOST_PATH}:/app/public/sitemaps:ro
     # Do not bind to host network; publish only the app port
     # Use `docker compose up --build -d` to build and run

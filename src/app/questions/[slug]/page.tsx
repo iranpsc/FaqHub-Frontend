@@ -35,12 +35,14 @@ async function loadVisibleComments(questionId: string, answers: Answer[]): Promi
     answerComments[answer.id] = {
       comments: result.data || [],
       total: result.meta?.total,
+      lastPage: result.meta?.last_page,
     };
   });
 
   return {
     questionComments: questionResult?.data || [],
     questionCommentTotal: questionResult?.meta?.total,
+    questionCommentLastPage: questionResult?.meta?.last_page,
     answerComments,
   };
 }
@@ -122,6 +124,7 @@ export default async function QuestionDetailsPage({
         slug={slug}
         initialQuestion={question}
         initialAnswers={answers}
+        initialCommentExtras={commentExtras}
       />
     </>
   )

@@ -11,7 +11,7 @@ import { CommentsSection } from './CommentsSection';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAnswers } from '../../hooks/useAnswers';
 import { useSweetAlert } from '../../hooks/useSweetAlert';
-import { Answer, VoteData, VoteChangedData, AnswerCorrectnessData, CommentData, PaginationMeta } from '../../services/types';
+import { Answer, Comment, VoteData, VoteChangedData, AnswerCorrectnessData, CommentData, PaginationMeta } from '../../services/types';
 
 interface AnswersSectionProps {
   questionId: string;
@@ -20,6 +20,7 @@ interface AnswersSectionProps {
   onVoteChanged: (voteData: VoteChangedData) => void;
   onAnswerCorrectnessChanged: (data: AnswerCorrectnessData) => void;
   onCommentAdded: (commentData: CommentData) => void;
+  initialAnswerComments?: Record<string, { comments: Comment[]; total?: number; lastPage?: number }>;
 }
 
 export function AnswersSection({
@@ -28,7 +29,8 @@ export function AnswersSection({
   onAnswerAdded,
   onVoteChanged,
   onAnswerCorrectnessChanged,
-  onCommentAdded
+  onCommentAdded,
+  initialAnswerComments = {},
 }: AnswersSectionProps) {
   const { isAuthenticated } = useAuth();
   const {
@@ -642,6 +644,14 @@ export function AnswersSection({
                   answerId={answer.id}
                   parentType="answer"
                   onCommentAdded={() => onCommentAdded({})}
+                  initialComments={initialAnswerComments[answer.id]?.comments}
+                  initialPagination={initialAnswerComments[answer.id]?.total !== undefined
+                    ? {
+                        current_page: 1,
+                        last_page: initialAnswerComments[answer.id].lastPage ?? 1,
+                        total: initialAnswerComments[answer.id].total ?? initialAnswerComments[answer.id].comments.length,
+                      }
+                    : null}
                 />
               </div>
             </div>

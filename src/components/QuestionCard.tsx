@@ -159,7 +159,7 @@ export function QuestionCard({ question, onClick }: QuestionCardProps) {
             {question.user && (
               <Link
                 href={`/authors/${question.user?.username ?? question.user?.id}`}
-                className="flex items-center gap-2 hover:underline text-blue-600 dark:text-blue-500"
+                className="flex items-center gap-2 hover:underline text-blue-600 dark:text-blue-300"
               >
                 <BaseAvatar 
                   src={userAvatarSrc(question.user)} 

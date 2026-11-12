@@ -21,13 +21,17 @@ interface CommentsSectionProps {
   answerId?: string;
   parentType: 'question' | 'answer';
   onCommentAdded?: () => void;
+  initialComments?: Comment[];
+  initialPagination?: PaginationMeta | null;
 }
 
 export function CommentsSection({ 
   questionId, 
   answerId, 
   parentType, 
-  onCommentAdded 
+  onCommentAdded,
+  initialComments = [],
+  initialPagination = null,
 }: CommentsSectionProps) {
   const { isAuthenticated } = useAuth();
   const {
@@ -40,7 +44,7 @@ export function CommentsSection({
     deleteComment: deleteCommentApi,
     publishComment: publishCommentApi,
     fetchComments
-  } = useComments();
+  } = useComments(initialComments);
   const { fire } = useSweetAlert();
 
   const [newComment, setNewComment] = useState('');
@@ -48,7 +52,7 @@ export function CommentsSection({
   const [editContent, setEditContent] = useState('');
   const [isPublishingComment, setIsPublishingComment] = useState<string | null>(null);
   const [showCommentBox, setShowCommentBox] = useState(false);
-  const [commentsPagination, setCommentsPagination] = useState<PaginationMeta | null>(null);
+  const [commentsPagination, setCommentsPagination] = useState<PaginationMeta | null>(initialPagination);
   const [currentCommentsPage, setCurrentCommentsPage] = useState(1);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -64,7 +68,7 @@ export function CommentsSection({
     }
   };
   const fetchCommentsData = useCallback(async (parentId: string, parentType: 'question' | 'answer', page = 1) => {
-    const result = await fetchComments(parentId, parentType);
+    const result = await fetchComments(parentId, parentType, page, page > 1);
     if (result && result.success) {
       // Assuming the API returns pagination metadata
       setCommentsPagination(result.meta || null);
@@ -74,10 +78,13 @@ export function CommentsSection({
   }, [fetchComments]);
 
   useEffect(() => {
-    if (parentId) {
+    // Detail pages receive the first page during SSR for both visible content
+    // and JSON-LD. Reuse it instead of issuing the same request again after
+    // hydration. Components without server data retain their existing fetch.
+    if (parentId && initialPagination === null) {
       fetchCommentsData(parentId, parentType);
     }
-  }, [parentId, parentType, fetchCommentsData]);
+  }, [parentId, parentType, fetchCommentsData, initialPagination]);
 
   const loadMoreComments = async () => {
     if (!hasMoreComments || isLoadingMore || !parentId) return;

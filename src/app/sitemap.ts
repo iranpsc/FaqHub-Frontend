@@ -2,7 +2,6 @@ import type { MetadataRoute } from 'next';
 import { apiService } from '@/services/api';
 import { SITE_URL, toIsoDate } from '@/lib/schema';
 
-export const dynamic = 'force-dynamic';
 export const revalidate = 3600;
 
 const STATIC_PATHS = ['/', '/about', '/contact', '/categories', '/tags', '/authors', '/activities'];
@@ -22,13 +21,20 @@ async function collectPages<T>(
     const lastPage = Math.min(Math.max(first.meta?.last_page ?? 1, 1), maxPages);
 
     if (lastPage > 1) {
-      const rest = await Promise.all(
-        Array.from({ length: lastPage - 1 }, (_, index) =>
-          load(index + 2).catch(() => ({ data: [] as T[] }))
-        )
-      );
-      for (const page of rest) {
-        items.push(...(page.data ?? []));
+      const pageNumbers = Array.from({ length: lastPage - 1 }, (_, index) => index + 2);
+      const concurrency = 5;
+
+      // Do not turn a sitemap regeneration into dozens of simultaneous API
+      // requests. Batches preserve the same output while protecting the API
+      // from crawler-triggered bursts.
+      for (let start = 0; start < pageNumbers.length; start += concurrency) {
+        const batch = pageNumbers.slice(start, start + concurrency);
+        const rest = await Promise.all(
+          batch.map((page) => load(page).catch(() => ({ data: [] as T[] })))
+        );
+        for (const page of rest) {
+          items.push(...(page.data ?? []));
+        }
       }
     }
 
@@ -50,10 +56,13 @@ function entry(path: string, lastModified?: string | null, priority = 0.6): Meta
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [questions, categories, tags, authors] = await Promise.all([
-    collectPages((page) => apiService.getQuestionsServer({ page }), 30),
-    collectPages((page) => apiService.getCategoriesPaginatedServer({ page, per_page: 50 }), 10),
-    collectPages((page) => apiService.getTagsPaginatedServer({ page, per_page: 50 }), 10),
-    collectPages((page) => apiService.getAuthorsServer({ page, per_page: 50 }), 10),
+    // Sitemap generation only needs question URLs and timestamps. Request the
+    // lightweight representation so large editor contents are not cached by
+    // Next.js while the sitemap is built.
+    collectPages((page) => apiService.getQuestionsServer({ page, summary: 1 }, false), 30),
+    collectPages((page) => apiService.getCategoriesPaginatedServer({ page, per_page: 50 }, false), 10),
+    collectPages((page) => apiService.getTagsPaginatedServer({ page, per_page: 50 }, false), 10),
+    collectPages((page) => apiService.getAuthorsServer({ page, per_page: 50 }, false), 10),
   ]);
 
   const staticEntries = STATIC_PATHS.map((path) => entry(path, null, path === '/' ? 1 : 0.7));

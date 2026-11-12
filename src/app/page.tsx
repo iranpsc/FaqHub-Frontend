@@ -3,7 +3,6 @@ import { JsonLd } from '@/components/JsonLd';
 import { apiService } from '@/services/api';
 import { buildListItems, SITE_URL, websiteSchema, type JsonLdNode } from '@/lib/schema';
 
-export const dynamic = 'force-dynamic';
 export const revalidate = 60; // Revalidate every 60 seconds
 
 export async function generateMetadata() {
@@ -32,8 +31,8 @@ export async function generateMetadata() {
 export default async function HomePage() {
   try {
     const [questionsData, activeUsers] = await Promise.all([
-      apiService.getQuestionsServer(),
-      apiService.getActiveUsersServer(12)
+      apiService.getQuestionsServer({ summary: 1 }, false),
+      apiService.getActiveUsersServer(12, false)
     ]);
 
     const initialQuestions = Array.isArray(questionsData.data) ? questionsData.data : [];

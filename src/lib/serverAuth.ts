@@ -1,13 +1,10 @@
 import { cookies } from 'next/headers';
 
 import type { AuthUser } from '@/types/auth';
+import { SERVER_API_URL } from '@/lib/apiConfig';
 
 const AUTH_COOKIE_NAME = 'auth_token';
-const SERVER_API_BASE_URL =
-  process.env.SERVER_API_URL ??
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  'http://localhost:8000/api';
+const SERVER_API_BASE_URL = SERVER_API_URL;
 
 interface ServerAuthState {
   user: AuthUser | null;

@@ -289,7 +289,8 @@ function answerNode(
 export type QaPageComments = {
   questionComments?: Comment[];
   questionCommentTotal?: number;
-  answerComments?: Record<string, { comments: Comment[]; total?: number }>;
+  questionCommentLastPage?: number;
+  answerComments?: Record<string, { comments: Comment[]; total?: number; lastPage?: number }>;
 };
 
 export function buildQaPageSchema(
